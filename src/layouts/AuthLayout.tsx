@@ -1,5 +1,4 @@
 import React from 'react';
-import { ShieldCheck } from 'lucide-react';
 
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {
     return (

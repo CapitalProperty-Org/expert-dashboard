@@ -17,6 +17,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  padding: 0;
+}
+
 /* ... existing styles ... */
 
 /* Custom Day Picker Styles */

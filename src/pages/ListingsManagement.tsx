@@ -1,59 +1,196 @@
-import { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, X, SlidersHorizontal, ArrowUpDown, LayoutGrid, Plus, List } from 'lucide-react';
-import ListingsEmptyState from '../components/dashboard/ListingsEmptyState';
+import { Link } from 'react-router-dom';
 import ListingsTable from '../components/dashboard/ListingsTable';
-import ToggleButton from '../components/dashboard/ToggleButton'; // تم تصحيح المسار
+import ToggleButton from '../components/dashboard/ToggleButton';
 import MoreFiltersModal from '../components/dashboard/MoreFiltersModal';
 import PropertyCard from '../components/dashboard/PropertyCard';
-import { Link } from 'react-router-dom';
+import ListingsEmptyState from '../components/dashboard/ListingsEmptyState';
+import { useListings } from '../context/ListingsContext';
+import { useDebounce } from '../hooks/useDebounce';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import BulkActionBar from '../components/dashboard/BulkActionBar';
+import axios from 'axios';
 
-const mockListings = [
-  { ref: '5', category: 'Residential', offering: 'Sale', type: 'Villa', bedrooms: null, area: null, location: 'Nad Al Dhabi, Al Jubail island, Abu Dhabi', qualityScore: 29, price: '899,999 AED', status: 'Offline', lastUpdated: '21 hours ago', agent: 'Saif Alwheibi' },
-  { ref: 'Sari1', category: 'Residential', offering: 'Rent', type: 'Villa', bedrooms: 12, area: null, location: 'Khalifa City, Abu Dhabi', qualityScore: 36, price: null, status: 'Offline', lastUpdated: '10 days ago', agent: 'Saif Alwheibi' },
+const sortOptions = [
+    { label: "Listing Created: Newest", value: { sortBy: 'created_at', sortDirection: 'desc' } },
+    { label: "Listing Created: Oldest", value: { sortBy: 'created_at', sortDirection: 'asc' } },
+    { label: "Price: Highest", value: { sortBy: 'price', sortDirection: 'desc' } },
+    { label: "Price: Lowest", value: { sortBy: 'price', sortDirection: 'asc' } },
 ];
-const sortOptions = ["Listing Created: Newest", "Listing Created: Oldest", "Price: Highest", "Price: Lowest"];
+
+const initialFilters = {
+    draft: true, live: false, search: '', reference: '', assigned_to_id: '',
+    category: '', bedrooms: '', bedrooms_gte: '', type: '', offering_type: '',
+    price_min: '', price_max: '', size_min: '', size_max: '', furnishing_type: ''
+};
 
 const ListingsManagement = () => {
-    const [showUnpublished, setShowUnpublished] = useState(false);
-    const [isFiltersModalOpen, setFiltersModalOpen] = useState(false);
+    const { listings, pagination, loading, error, fetchListings } = useListings();
+
+    const [filters, setFilters] = useState(initialFilters);
+    const [sort, setSort] = useState(sortOptions[0].value);
+    const [currentSortLabel, setCurrentSortLabel] = useState(sortOptions[0].label);
+    const debouncedSearch = useDebounce(filters.search, 500);
+
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
     const [isSortOpen, setSortOpen] = useState(false);
-    const listingCount = showUnpublished ? 2 : 0;
+    const [isFiltersModalOpen, setFiltersModalOpen] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    
+    const applyFiltersAndFetch = useCallback(() => {
+        const activeFilters = { ...filters, search: debouncedSearch };
+        Object.keys(activeFilters).forEach(key => {
+            const filterKey = key as keyof typeof activeFilters;
+            if (!activeFilters[filterKey]) {
+                delete activeFilters[filterKey];
+            }
+        });
+        if (!activeFilters.draft) delete activeFilters.draft;
+        if (!activeFilters.live) delete activeFilters.live;
 
+        fetchListings({ filters: activeFilters, sort });
+    }, [filters, debouncedSearch, sort, fetchListings]);
+
+    useEffect(() => {
+        applyFiltersAndFetch();
+    }, [applyFiltersAndFetch]);
+
+    const handleApplyModalFilters = (newFiltersFromModal: { [key: string]: any }) => {
+        setFilters(newFiltersFromModal);
+    };
+
+    const handleSortChange = (newSortOption: { label: string, value: any }) => {
+        setSort(newSortOption.value);
+        setCurrentSortLabel(newSortOption.label);
+        setSortOpen(false);
+    };
+
+    const handleToggleDrafts = () => {
+        setFilters(prev => ({ ...prev, draft: !prev.draft, live: prev.draft }));
+    };
+    
+    const handleSelectionChange = (id: string, isSelected: boolean) => {
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            if (isSelected) newSet.add(id);
+            else newSet.delete(id);
+            return newSet;
+        });
+    };
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedIds(new Set(listings.map(l => l.id)));
+        } else {
+            setSelectedIds(new Set());
+        }
+    };
+    
+    const handleActionComplete = () => {
+        applyFiltersAndFetch();
+    };
+
+    const handleBulkAction = async (action: 'publish' | 'archive') => {
+        const promises = Array.from(selectedIds).map(id => 
+            axios.post(`http://localhost:5000/api/listings/listings/${id}/${action}`)
+        );
+        try {
+            await Promise.all(promises);
+            alert(`Successfully performed ${action} on ${selectedIds.size} listings.`);
+            handleActionComplete();
+            setSelectedIds(new Set());
+            setIsSelectionMode(false);
+        } catch (err) {
+            alert(`Failed to perform ${action}. Please try again.`);
+        }
+    };
+
+    const handleDeselectAll = () => {
+        setSelectedIds(new Set());
+        setIsSelectionMode(false);
+    };
+
+    const renderContent = () => {
+        if (loading) return <div className="flex justify-center items-center h-full"><LoadingSpinner /></div>;
+        if (error) return <div className="text-center text-red-500 py-16">{error}</div>;
+        if (listings.length === 0) return <ListingsEmptyState />;
+        
+        if (viewMode === 'list') {
+            return <ListingsTable listings={listings} isSelectionMode={isSelectionMode} selectedIds={selectedIds} onSelectionChange={handleSelectionChange} onSelectAll={handleSelectAll} onActionComplete={handleActionComplete} />;
+        } else {
+            return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {listings.map(listing => <PropertyCard key={listing.id} listing={listing} onActionComplete={handleActionComplete} />)}
+                </div>
+            );
+        }
+    };
+    
     return (
         <>
-            {isFiltersModalOpen && <MoreFiltersModal onClose={() => setFiltersModalOpen(false)} />}
+            {isFiltersModalOpen && (
+                <MoreFiltersModal 
+                    onClose={() => setFiltersModalOpen(false)}
+                    initialFilters={filters}
+                    onApply={handleApplyModalFilters}
+                />
+            )}
             
             <div className="flex flex-col h-full bg-gray-50">
-                {/* --- HEADER SECTION (Non-scrollable Part) --- */}
                 <div className="p-4 sm:p-6 md:p-8 space-y-4 lg:space-y-6 bg-gray-50 flex-shrink-0 z-10">
                     <div className="hidden lg:flex flex-wrap gap-y-4 items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <h1 className="text-2xl font-bold text-black">Listings Management {listingCount > 0 && `(${listingCount})`}</h1>
-                            <button className="text-sm bg-violet-600 text-white font-semibold py-1.5 px-3 rounded-md">What's changed</button>
-                            <button className="text-sm bg-white border text-gray-700 font-semibold py-1.5 px-3 rounded-md">Watch tutorial</button>
-                        </div>
-                        {/* Corrected Desktop Header Buttons */}
-                        <div className="flex items-center gap-4">
-                            {showUnpublished && <button className="text-sm bg-white border border-violet-600 text-violet-600 font-semibold py-2 px-4 rounded-md hover:bg-violet-50">Select Listings</button>}
-                        <Link to="/add-listing">
-                                <button className="bg-red-600 text-white font-semibold py-2 px-4 rounded-md flex items-center gap-2"><Plus size={16} />List new property</button>
-                            </Link>
-                        </div>
+                         <h1 className="text-2xl font-bold text-black">Listings Management {pagination && `(${pagination.total})`}</h1>
+                         <div className="flex items-center gap-4">
+                             {selectedIds.size > 0 && <span className="text-sm font-semibold text-gray-700">{selectedIds.size} Selected</span>}
+                             {!isSelectionMode && listings.length > 0 && 
+                                <button onClick={() => setIsSelectionMode(true)} className="text-sm bg-white border border-violet-600 text-violet-600 font-semibold py-2 px-4 rounded-md hover:bg-violet-50">Select Listings</button>
+                             }
+                             <Link to="/add-listing"><button className="bg-red-600 text-white font-semibold py-2 px-4 rounded-md flex items-center gap-2"><Plus size={16} />List new property</button></Link>
+                         </div>
                     </div>
-                    <h1 className="text-2xl font-bold lg:hidden text-black">Listings Management {listingCount > 0 && `(${listingCount})`}</h1>
+                    
+                    <div className="lg:hidden flex justify-between items-center">
+                         <h1 className="text-xl font-bold text-black">Listings Management {pagination && `(${pagination.total})`}</h1>
+                    </div>
+
                     <div className="space-y-4">
                         <div className="relative w-full">
                             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                            <input type="text" placeholder="City, community or building" className="w-full bg-white pl-10 pr-8 py-2.5 border rounded-lg" />
-                            <X size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input 
+                                type="text" 
+                                placeholder="City, community or building" 
+                                value={filters.search}
+                                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                                className="w-full bg-white pl-10 pr-8 py-2.5 border rounded-lg" 
+                            />
+                            {filters.search && <X size={16} onClick={() => setFilters(prev => ({ ...prev, search: '' }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer" />}
                         </div>
                         <div className="flex flex-wrap gap-2 items-center justify-between text-black">
                            <div className="flex flex-wrap gap-2 items-center">
                                 <button onClick={() => setFiltersModalOpen(true)} className="flex items-center gap-2 text-sm font-medium bg-white border rounded-lg p-2.5 lg:px-3"><SlidersHorizontal size={16} /><span className="hidden lg:inline">All Filters</span></button>
                                 <div className="relative">
-                                    <button onClick={() => setSortOpen(!isSortOpen)} className="flex items-center gap-2 text-sm font-medium bg-white border rounded-lg p-2.5 lg:px-3"><ArrowUpDown size={16} /><span className="hidden lg:inline">Listing Created: Newest</span></button>
-                                    {isSortOpen && <div className="absolute top-full mt-2 w-56 bg-white rounded-md shadow-lg border z-20"><ul className="py-1">{sortOptions.map(opt => <li key={opt}><a href="#" className="block px-4 py-2 text-sm hover:bg-gray-100">{opt}</a></li>)}</ul></div>}
+                                    <button onClick={() => setSortOpen(!isSortOpen)} className="flex items-center gap-2 text-sm font-medium bg-white border rounded-lg p-2.5 lg:px-3">
+                                        <ArrowUpDown size={16} />
+                                        <span className="hidden lg:inline">{currentSortLabel}</span>
+                                    </button>
+                                    {isSortOpen && 
+                                        <div className="absolute top-full mt-2 w-56 bg-white rounded-md shadow-lg border z-20">
+                                            <ul className="py-1">
+                                                {sortOptions.map(opt => (
+                                                    <li key={opt.label}>
+                                                        <button 
+                                                            onClick={() => handleSortChange(opt)} 
+                                                            className="w-full text-left block px-4 py-2 text-sm hover:bg-gray-100"
+                                                        >
+                                                            {opt.label}
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    }
                                 </div>
                                 <button onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')} className="flex items-center gap-2 text-sm font-medium bg-white border rounded-lg p-2.5 lg:px-3">
                                     {viewMode === 'list' ? <LayoutGrid size={16} /> : <List size={16} />}<span className="hidden lg:inline">{viewMode === 'list' ? 'Grid' : 'List'}</span>
@@ -61,38 +198,39 @@ const ListingsManagement = () => {
                            </div>
                             <div className="flex items-center gap-3">
                                 <span className="text-sm font-medium text-gray-600">Drafts / Unpublished</span>
-                                <ToggleButton isOn={showUnpublished} handleToggle={() => setShowUnpublished(!showUnpublished)} />
+                                <ToggleButton isOn={filters.draft} handleToggle={handleToggleDrafts} />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* --- MAIN CONTENT (Scrollable Part) --- */}
                 <div className="px-4 sm:px-6 md:px-8 flex-grow overflow-y-auto pb-28 lg:pb-4">
-                    {!showUnpublished ? <div className="flex items-center justify-center h-full"><ListingsEmptyState /></div> : (
-                        viewMode === 'list' ? <ListingsTable /> : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {mockListings.map((listing, i) => <PropertyCard key={i} listing={listing} />)}
-                            </div>
-                        )
-                    )}
+                    {renderContent()}
                 </div>
-
-                {/* --- Mobile Fixed Footer (Corrected for Logic and Style) --- */}
-                <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t p-4 flex items-center z-30">
-                    {showUnpublished ? (
-                        <div className="flex justify-between items-center w-full gap-4">
-                            <button className="text-sm bg-white border border-violet-600 text-violet-600 font-semibold py-2.5 px-4 rounded-lg w-auto hover:bg-violet-50">Select Listings</button>
-                        <Link to="/add-listing">
-                           <button className="bg-red-600 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 w-auto hover:bg-red-700"><Plus size={16} />List new property</button>
-                            </Link>
-                        </div>
-                    ) : (
-                        <Link to="/add-listing">
-                              <button className="bg-red-600 text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 w-full"><Plus size={16} />List new property</button>
+                
+                {selectedIds.size > 0 && (
+                    <BulkActionBar 
+                        selectedCount={selectedIds.size}
+                        onDeselectAll={handleDeselectAll}
+                        onPublish={() => handleBulkAction('publish')}
+                        onArchive={() => handleBulkAction('archive')}
+                    />
+                )}
+                
+                {selectedIds.size === 0 && (
+                    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t p-4 flex items-center justify-center gap-4 z-30">
+                        {!isSelectionMode && listings.length > 0 && (
+                            <button onClick={() => setIsSelectionMode(true)} className="text-sm bg-white border border-violet-600 text-violet-600 font-semibold py-2.5 px-4 rounded-lg w-full max-w-xs hover:bg-violet-50">
+                                Select Listings
+                            </button>
+                        )}
+                        <Link to="/add-listing" className="w-full max-w-xs">
+                           <button className="bg-red-600 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 w-full hover:bg-red-700">
+                               <Plus size={16} />List new property
+                           </button>
                         </Link>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
         </>
     );
