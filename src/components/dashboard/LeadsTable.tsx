@@ -1,6 +1,7 @@
 import { User, ArrowUp } from 'lucide-react';
 import { formatRelativeTime } from '../../utils/formatDate';
 import type { Lead } from '../../context/LeadsContext';
+import { Link } from 'react-router-dom';
 
 interface LeadsTableProps {
     leads: Lead[];
@@ -46,8 +47,11 @@ const LeadsTable = ({ leads }: LeadsTableProps) => {
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-600 capitalize">{lead.status}</td>
               <td className="px-6 py-4 whitespace-nowrap text-right">
-                <button className="text-sm bg-white border border-violet-600 text-violet-600 font-semibold py-2 px-4 rounded-md hover:bg-violet-50">Lead Details</button>
-              </td>
+<Link to={`/leads/${lead.id}`}>
+              <button className="text-sm bg-white border border-violet-600 text-violet-600 font-semibold py-2 px-4 rounded-md hover:bg-violet-50">
+                Lead Details
+              </button>
+            </Link>              </td>
             </tr>
           ))}
         </tbody>

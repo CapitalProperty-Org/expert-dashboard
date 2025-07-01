@@ -17,11 +17,11 @@ interface LeadsMoreFiltersModalProps {
 }
 
 const propertyTypeOptions: SelectOption[] = [
-    { value: 'apartment', label: 'Apartment' }, { value: 'villa', label: 'Villa' }, { value: 'townhouse', label: 'Townhouse' },
-    { value: 'penthouse', label: 'Penthouse' }, { value: 'compound', label: 'Compound' }, { value: 'duplex', label: 'Duplex' },
-    { value: 'office_space', label: 'Office Space' }, { value: 'retail', label: 'Retail' }, { value: 'shop', label: 'Shop' },
-    { value: 'show_room', label: 'Show Room' }, { value: 'short_term_hotel_apartment', label: 'Short Term & Hotel Apartment' },
-    { value: 'bulk_units', label: 'Bulk Units' }, { value: 'others', label: 'Others' }
+    { value: 'Apartment', label: 'Apartment' }, { value: 'Villa', label: 'Villa' }, { value: 'Townhouse', label: 'Townhouse' },
+    { value: 'Penthouse', label: 'Penthouse' }, { value: 'Compound', label: 'Compound' }, { value: 'Duplex', label: 'Duplex' },
+    { value: 'Office Space', label: 'Office Space' }, { value: 'Retail', label: 'Retail' }, { value: 'Shop', label: 'Shop' },
+    { value: 'Show Room', label: 'Show Room' }, { value: 'Short Term & Hotel Apartment', label: 'Short Term & Hotel Apartment' },
+    { value: 'Bulk Units', label: 'Bulk Units' }, { value: 'Others', label: 'Others' }
 ];
 const typeOptions: SelectOption[] = [ { value: 'buyer', label: 'Buyer' }, { value: 'tenant', label: 'Tenant' } ];
 const categoryOptions: SelectOption[] = [ { value: 'residential', label: 'Residential' }, { value: 'commercial', label: 'Commercial' } ];
@@ -36,7 +36,7 @@ const LeadsMoreFiltersModal = ({ onClose, initialFilters, onApply }: LeadsMoreFi
     const fetchAgents = async () => {
         setIsLoadingAgents(true);
         try {
-            const res = await axios.get('http://localhost:5000/api/users?role=agent');
+            const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/users?role=agent`);
             setAgents(res.data.map((item: any) => ({ value: item.pf_agent_id, label: `${item.first_name} ${item.last_name}` })));
         } catch (error) { console.error("Failed to fetch agents", error); } 
         finally { setIsLoadingAgents(false); }

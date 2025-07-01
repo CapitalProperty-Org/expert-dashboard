@@ -31,6 +31,7 @@ import NewCustomRole from "./pages/NewCustomRole";
 import LoginPage from "./pages/LoginPage";
 import UserDetails from "./pages/UserDetails";
 import { ListingsProvider } from "./context/ListingsContext";
+import LeadDetails from "./pages/LeadDetails";
 
 const AppRoutes = () => {
   const { token, isLoading } = useAuth();
@@ -65,6 +66,7 @@ const AppRoutes = () => {
           <Route path="listings-settings" element={<ListingsSettings />} />
           <Route path="leads-management" element={<LeadsManagement />} />
           <Route path="new-lead" element={<NewLead />} />
+          <Route path="leads/:id" element={<LeadDetails />} />
           <Route path="leads-regular-management" element={<LeadsRegularManagement />} />
           <Route path="community-top-spot" element={<CommunityTopSpot />} />
           <Route path="contracts" element={<Contracts />} />

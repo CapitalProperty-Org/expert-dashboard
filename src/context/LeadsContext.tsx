@@ -57,7 +57,7 @@ export const LeadsProvider = ({ children }: { children: React.ReactNode }) => {
             params['filter[createdAt][to]'] = filters.date_to;
         }
             
-            const response = await axios.get('http://localhost:5000/api/agent-opportunities', { params });
+            const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/agent-opportunities`, { params });
 
             setLeads(response.data.data);
             setPagination(response.data.pagination);

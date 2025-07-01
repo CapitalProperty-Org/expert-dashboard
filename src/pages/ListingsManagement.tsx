@@ -95,7 +95,7 @@ const ListingsManagement = () => {
    const handleBulkAction = async (action: 'publish' | 'archive' | 'unarchive' | 'reject' | 'reassign', data?: any) => {
         setIsSubmittingAction(true);
         const promises = Array.from(selectedIds).map(id => {
-            const endpoint = `http://localhost:5000/api/listings/listings/${id}/${action}`;
+            const endpoint = `${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/${action}`;
             return axios.post(endpoint, data);
         });
         

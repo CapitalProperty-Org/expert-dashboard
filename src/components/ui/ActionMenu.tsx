@@ -25,8 +25,8 @@ const ActionMenu = ({ listingId, onActionComplete }: ActionMenuProps) => {
 
     const handleAction = async (action: 'archive' | 'delete') => {
         const endpoint = action === 'delete' 
-            ? `http://localhost:5000/api/listings/listings/${listingId}` 
-            : `http://localhost:5000/api/listings/listings/${listingId}/archive`;
+            ? `${import.meta.env.VITE_BASE_URL}/api/listings/listings/${listingId}` 
+            : `${import.meta.env.VITE_BASE_URL}/api/listings/listings/${listingId}/archive`;
             
         const method = action === 'delete' ? 'delete' : 'post';
 

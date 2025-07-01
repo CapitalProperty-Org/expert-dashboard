@@ -60,12 +60,12 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
 
             params.append('page', page.toString());
             
-            const listingsResponse = await axios.get(`http://localhost:5000/api/listings/listings?${params.toString()}`);
+            const listingsResponse = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/listings/listings?${params.toString()}`);
             const { results, pagination: newPagination } = listingsResponse.data;
             
             if (results && results.length > 0) {
                 const listingIds = results.map((l: Listing) => l.id).join(',');
-                const attributesResponse = await axios.get(`http://localhost:5000/api/listings/listing-attributes?ids=${listingIds}`);
+                const attributesResponse = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/listings/listing-attributes?ids=${listingIds}`);
                 const attributesData = attributesResponse.data;
 
                 const mergedListings = results.map((listing: Listing) => ({

@@ -25,7 +25,7 @@ const ArchiveTableActionMenu = ({ listingId, onActionComplete }: ArchiveTableAct
 
     const handleUnarchive = async () => {
         try {
-            await axios.post(`http://localhost:5000/api/listings/listings/${listingId}/unarchive`);
+            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${listingId}/unarchive`);
             alert('Listing unarchived successfully!');
             onActionComplete();
         } catch (error) {
