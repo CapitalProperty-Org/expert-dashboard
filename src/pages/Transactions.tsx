@@ -6,7 +6,8 @@ import { Link } from 'react-router-dom';
 
 const Transactions = () => {
     const [activeTab, setActiveTab] = useState('transactions');
-    const [hasData, setHasData] = useState(false); // Set to true to see a table later
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [hasData, _setHasData] = useState(false); // Set to true to see a table later
 
     const tabs = ['Transactions', 'Approved', 'Pending', 'Rejected'];
     const tableHeaders = ["Agent", "Listing Details", "Transaction Value", "Claimed On", "Status"];
