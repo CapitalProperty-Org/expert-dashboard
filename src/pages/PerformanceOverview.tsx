@@ -25,7 +25,8 @@ const statMapping = [
 
 
 const PerformanceOverviewComponent = () => {
-  const { stats, loading, error, fetchStats } = usePerformance();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { stats, loading, _error, fetchStats } = usePerformance();
   const [activeStatKey, setActiveStatKey] = useState<string>('published_listings');
   const [openFilterIndex, setOpenFilterIndex] = useState<number | null>(null);
   
