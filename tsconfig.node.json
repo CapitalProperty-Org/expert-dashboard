@@ -1,13 +1,25 @@
 {
   "compilerOptions": {
-    // -- إعدادات أساسية لبيئة Node.js --
-    "composite": true, // يسمح لملفات tsconfig الأخرى بالإشارة إليه
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "ESNext",
     "skipLibCheck": true,
-    "module": "ESNext", // استخدام نظام الموديولات الحديث
-    "moduleResolution": "bundler", // طريقة البحث عن الموديولات
-    "allowSyntheticDefaultImports": true, // يسمح باستيراد الموديولات التي تستخدم default export
-    "strict": true // تفعيل القواعد الصارمة
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
   },
-  "include": ["vite.config.ts"] // تحديد الملفات التي تنطبق عليها هذه الإعدادات
+  "include": ["vite.config.ts"]
 }

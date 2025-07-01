@@ -9,6 +9,7 @@ interface Option {
 
 interface CustomSelectProps {
   options: Option[];
+  disabled?: boolean;
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
@@ -16,7 +17,8 @@ interface CustomSelectProps {
 
 }
 
-const CustomSelect = ({ options, placeholder, value, onChange , className }: CustomSelectProps) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const CustomSelect = ({ options, disabled , placeholder, value, onChange , className }: CustomSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectedOption = options.find(opt => opt.value === value);
   const ref = useRef<HTMLDivElement>(null);

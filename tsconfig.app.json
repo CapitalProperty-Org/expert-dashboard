@@ -1,31 +1,27 @@
 {
   "compilerOptions": {
-    // --- إعدادات أساسية لـ Vite و React ---
-    "target": "ESNext", // استهداف أحدث إصدارات جافاسكريبت
-    "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"], // المكتبات الأساسية للمتصفح وجافاسكريبت
-    "module": "ESNext", // استخدام نظام الموديولات الحديث
-    "skipLibCheck": true, // تخطي فحص ملفات .d.ts في المكتبات الخارجية لتسريع الـ build
-    "jsx": "react-jsx", // الإعداد الصحيح لـ React 17+ (لا يتطلب import React)
-
-    // --- إعدادات ربط الموديولات (Bundler mode) ---
-    "moduleResolution": "bundler", // طريقة البحث عن الموديولات، موصى بها لـ Vite
-    "allowImportingTsExtensions": true, // السماح باستيراد ملفات .ts و .tsx
-    "resolveJsonModule": true, // السماح باستيراد ملفات JSON
-    "isolatedModules": true, // التأكد من أن كل ملف يمكن ترجمته بشكل مستقل
-    "noEmit": true, // لا يتم إنشاء ملفات جافاسكريبت، Vite يتولى ذلك
-
-    // --- إعدادات فحص الكود (Linting) - متوازنة ---
-    "strict": true, // تفعيل كل قواعد الصرامة (ممارسة جيدة)
-    "noUnusedLocals": true, // التحذير من المتغيرات المحلية غير المستخدمة (مثل خطأ setHasData)
-    "noUnusedParameters": true, // التحذير من الباراميترز غير المستخدمة في الدوال
-    "noFallthroughCasesInSwitch": true, // منع الأخطاء الشائعة في جمل switch
-
-    // -- إعدادات إضافية تم تعديلها لتكون أقل صرامة في البداية --
-    "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "verbatimModuleSyntax": true
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
   },
-  "include": ["src"], // المجلد الذي يحتوي على الكود المصدر الخاص بك
-  "references": [{ "path": "./tsconfig.node.json" }] // الإشارة إلى ملف الإعدادات الخاص ببيئة Node
+  "include": ["src"]
 }
