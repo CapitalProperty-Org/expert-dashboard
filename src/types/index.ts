@@ -1,5 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 
+
+
+
 export interface NavItemType {
   label: string;
   icon: LucideIcon;
@@ -24,38 +27,45 @@ export interface FilterType {
   options: FilterOption[];
 }
 
-export interface ListingState {
-  emirate: string;
-  permitType: 'rera' | 'dtcm' | 'none' | null;
-  reraPermitNumber: string;
-  dtcmPermitNumber: string;
-  category: 'residential' | 'commercial' | null;
-  offeringType: 'rent' | 'sale' | null;
-  propertyType: string;
-  propertyLocation: string;
-  assignedAgent: string;
-  reference: string;
-  available: 'immediately' | 'fromDate' | null;
-  availableDate: Date | null;
-  size: string;
-  rooms: string;
-  bathrooms: string;
-  developer: string;
-  unitNumber: string;
-  parkingSpaces: string;
-  furnishingType: 'unfurnished' | 'semi' | 'furnished' | null;
-  propertyAge: string;
-  projectStatus: string;
-  ownerName: string;
-  price: string;
-  downPayment: string;
-  amenities: string[];
-  title: string;
-  description: string;
+export interface SelectOption {
+  value: number | string;
+  label: string;
 }
 
-export type ListingAction = {
-  type: 'UPDATE_FIELD';
-  field: keyof ListingState;
-  value: any;
-};
+export interface ListingState {
+uae_emirate: 'dubai' | 'abu_dhabi' | '';
+permitType: 'rera' | 'dtcm' | 'none' | null;
+reraPermitNumber: string;
+dtcmPermitNumber: string;
+category: 'residential' | 'commercial' | null;
+offeringType: 'rent' | 'sale' | null;
+rentalPeriod: 'yearly' | 'monthly' | 'weekly' | 'daily' | null;
+propertyType: string;
+propertyLocation: SelectOption | null; 
+assignedAgent: SelectOption | null;   
+reference: string;
+available: 'immediately' | 'fromDate';
+availableDate: Date | null;
+size: string;
+bedrooms: string;
+bathrooms: string;
+developer: string;
+unitNumber: string;
+parkingSlots: string;
+furnishingType: 'furnished' | 'unfurnished' | 'semi-furnished' | null;
+age: string;
+numberOfFloors: string;
+projectStatus: string;
+ownerName: string;
+price: string;
+downPayment: string;
+numberOfCheques?: string; 
+amenities: string[];
+title: string;
+description: string;
+}
+
+export type ListingAction = 
+| { type: 'UPDATE_FIELD'; field: keyof ListingState; value: any; }
+| { type: 'RESET_PERMIT' }
+| { type: 'RESET_REQUIREMENTS' };

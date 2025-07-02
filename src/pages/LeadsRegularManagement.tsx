@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, SlidersHorizontal, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import LeadsTable from '../components/dashboard/LeadsTable';
@@ -58,7 +58,7 @@ const LeadsManagementComponent = () => {
         fetchLeads // مهم جدًا لإضافة دالة fetchLeads هنا
     ]);
 
-    const handleApplyModalFilters = (newFiltersFromModal: { [key: string]: any }) => {
+    const handleApplyModalFilters = (newFiltersFromModal: { [key: string]: string | number | boolean }) => {
         // تحديث الحالة سيؤدي إلى تشغيل الـ useEffect أعلاه لأن القيم الفردية ستتغير
         setFilters(prev => ({ ...prev, ...newFiltersFromModal }));
     };

@@ -1,9 +1,23 @@
+import React, { useEffect } from 'react';
 import type { ListingAction, ListingState } from "../../../types";
 import FormLabel from "../../ui/FormLabel";
 import SegmentedControl from "../../ui/SegmentedControl";
 
-interface FormProps { state: ListingState; dispatch: React.Dispatch<ListingAction>; }
-const DescriptionForm = ({ state, dispatch }: FormProps) => {
+interface FormProps { 
+    state: ListingState; 
+    dispatch: React.Dispatch<ListingAction>;
+    onComplete: () => void;
+}
+
+const DescriptionForm = ({ state, dispatch, onComplete }: FormProps) => {
+    
+    useEffect(() => {
+        // يكتمل القسم عند إدخال العنوان والوصف
+        if (state.title && state.description) {
+            onComplete();
+        }
+    }, [state.title, state.description, onComplete]);
+
     return (
         <div className="space-y-6">
             <SegmentedControl options={[{label: 'English', value: 'en'}, {label: 'Arabic', value: 'ar'}]} value="en" onChange={() => {}} />

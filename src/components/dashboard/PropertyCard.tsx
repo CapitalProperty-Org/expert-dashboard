@@ -24,7 +24,6 @@ const PlaceholderImage = () => (
 const PropertyCard = ({ listing, onActionComplete }: PropertyCardProps) => {
     const priceValue = listing.price?.amounts?.[listing.price.type];
     const priceText = priceValue ? priceValue.toLocaleString() : 'POA';
-    const priceSuffix = priceValue && listing.price?.type === 'rent' ? 'Yearly' : '';
 
     return (
         <div className="bg-white border border-gray-200/80 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col">

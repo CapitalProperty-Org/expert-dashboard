@@ -12,16 +12,16 @@ interface SelectOption {
 
 interface LeadsMoreFiltersModalProps {
   onClose: () => void;
-  initialFilters: { [key: string]: any };
-  onApply: (newFilters: { [key:string]: any }) => void;
+  initialFilters: { [key: string]: string | number | boolean };
+  onApply: (newFilters: { [key:string]: string | number | boolean }) => void;
 }
 
 const propertyTypeOptions: SelectOption[] = [
-    { value: 'Apartment', label: 'Apartment' }, { value: 'Villa', label: 'Villa' }, { value: 'Townhouse', label: 'Townhouse' },
-    { value: 'Penthouse', label: 'Penthouse' }, { value: 'Compound', label: 'Compound' }, { value: 'Duplex', label: 'Duplex' },
-    { value: 'Office Space', label: 'Office Space' }, { value: 'Retail', label: 'Retail' }, { value: 'Shop', label: 'Shop' },
-    { value: 'Show Room', label: 'Show Room' }, { value: 'Short Term & Hotel Apartment', label: 'Short Term & Hotel Apartment' },
-    { value: 'Bulk Units', label: 'Bulk Units' }, { value: 'Others', label: 'Others' }
+    { value: 'apartment', label: 'Apartment' }, { value: 'villa', label: 'Villa' }, { value: 'townhouse', label: 'Townhouse' },
+    { value: 'penthouse', label: 'Penthouse' }, { value: 'compound', label: 'Compound' }, { value: 'duplex', label: 'Duplex' },
+    { value: 'office space', label: 'Office Space' }, { value: 'retail', label: 'Retail' }, { value: 'shop', label: 'Shop' },
+    { value: 'show room', label: 'Show Room' }, { value: 'short term & hotel apartment', label: 'Short Term & Hotel Apartment' },
+    { value: 'bulk units', label: 'Bulk Units' }, { value: 'others', label: 'Others' }
 ];
 const typeOptions: SelectOption[] = [ { value: 'buyer', label: 'Buyer' }, { value: 'tenant', label: 'Tenant' } ];
 const categoryOptions: SelectOption[] = [ { value: 'residential', label: 'Residential' }, { value: 'commercial', label: 'Commercial' } ];
@@ -37,14 +37,14 @@ const LeadsMoreFiltersModal = ({ onClose, initialFilters, onApply }: LeadsMoreFi
         setIsLoadingAgents(true);
         try {
             const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/users?role=agent`);
-            setAgents(res.data.map((item: any) => ({ value: item.pf_agent_id, label: `${item.first_name} ${item.last_name}` })));
+            setAgents(res.data.map((item: { pf_agent_id: string; first_name: string; last_name: string }) => ({ value: item.pf_agent_id, label: `${item.first_name} ${item.last_name}` })));
         } catch (error) { console.error("Failed to fetch agents", error); } 
         finally { setIsLoadingAgents(false); }
     };
     fetchAgents();
   }, []);
 
-  const handleFilterChange = (key: string, value: string) => {
+  const handleFilterChange = (key: string, value: string | number) => {
     setTempFilters(prev => ({ ...prev, [key]: value }));
   };
 
@@ -61,7 +61,7 @@ const LeadsMoreFiltersModal = ({ onClose, initialFilters, onApply }: LeadsMoreFi
   };
   
   const handleResetClick = () => {
-      const resetState: {[key: string]: any} = {};
+      const resetState: {[key: string]: string | number | boolean} = {};
       Object.keys(initialFilters).forEach(key => { resetState[key] = '' });
       setTempFilters(resetState);
       setDateRange([null, null]);
@@ -70,8 +70,8 @@ const LeadsMoreFiltersModal = ({ onClose, initialFilters, onApply }: LeadsMoreFi
   const Label = ({ children }: { children: React.ReactNode }) => (<label className="text-sm font-medium text-gray-700 block mb-2">{children}</label>);
 
   useEffect(() => {
-  const start = initialFilters.date_from ? new Date(initialFilters.date_from) : null;
-  const end = initialFilters.date_to ? new Date(initialFilters.date_to) : null;
+  const start = initialFilters.date_from ? new Date(String(initialFilters.date_from)) : null;
+  const end = initialFilters.date_to ? new Date(String(initialFilters.date_to)) : null;
   setDateRange([start, end]);
 }, [initialFilters]);
 
@@ -83,10 +83,10 @@ const LeadsMoreFiltersModal = ({ onClose, initialFilters, onApply }: LeadsMoreFi
                 {isLoadingAgents ? ( <div className="col-span-full text-center">Loading...</div> ) : (
                     <>
                         <div><Label>Leads received</Label><DatePicker selectsRange startDate={dateRange[0]} endDate={dateRange[1]} onChange={handleDateChange} className="w-full p-2.5 border rounded-lg" placeholderText="Lead received date"/></div>
-                        <div><Label>Property type</Label><CustomSelect options={propertyTypeOptions} placeholder="Property type" value={tempFilters.propertyType || ''} onChange={v => handleFilterChange('propertyType', v)} /></div>
-                        <div><Label>Assigned to</Label><CustomSelect options={agents} placeholder="Assigned to" value={tempFilters.agentId || ''} onChange={v => handleFilterChange('agentId', v)} /></div>
-                        <div><Label>Type</Label><CustomSelect options={typeOptions} placeholder="Type" value={tempFilters.type || ''} onChange={v => handleFilterChange('type', v)} /></div>
-                        <div><Label>Property Category</Label><CustomSelect options={categoryOptions} placeholder="Property Category" value={tempFilters.category || ''} onChange={v => handleFilterChange('category', v)} /></div>
+                        <div><Label>Property type</Label><CustomSelect options={propertyTypeOptions} placeholder="Property type" value={propertyTypeOptions.find(opt => opt.value === tempFilters.propertyType) || null} onChange={v => handleFilterChange('propertyType', v?.value ?? '')} /></div>
+                        <div><Label>Assigned to</Label><CustomSelect options={agents} placeholder="Assigned to" value={agents.find(opt => opt.value === tempFilters.agentId) || null} onChange={v => handleFilterChange('agentId', v?.value ?? '')} /></div>
+                        <div><Label>Type</Label><CustomSelect options={typeOptions} placeholder="Type" value={typeOptions.find(opt => opt.value === tempFilters.type) || null} onChange={v => handleFilterChange('type', v?.value ?? '')} /></div>
+                        <div><Label>Property Category</Label><CustomSelect options={categoryOptions} placeholder="Property Category" value={categoryOptions.find(opt => opt.value === tempFilters.category) || null} onChange={v => handleFilterChange('category', v?.value ?? '')} /></div>
                     </>
                 )}
             </div>

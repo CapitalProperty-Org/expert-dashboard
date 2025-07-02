@@ -1,14 +1,10 @@
 import axios from 'axios';
 import AsyncSelect from 'react-select/async';
-
-interface SelectOption {
-    value: number;
-    label: string;
-}
+import type { SelectOption } from '../../types';
 
 interface LocationAutocompleteProps {
-    value: SelectOption[];
-    onChange: (value: SelectOption[]) => void;
+    value: SelectOption | null;
+    onChange: (value: SelectOption | null) => void;
 }
 
 const LocationAutocomplete = ({ value, onChange }: LocationAutocompleteProps) => {
@@ -28,7 +24,7 @@ const LocationAutocomplete = ({ value, onChange }: LocationAutocompleteProps) =>
                 const response = await axios.get(
                     `${import.meta.env.VITE_BASE_URL}/api/location-tree/search/autocomplete?keyword=${inputValue}&limit_by_city=50`
                 );
-                const options = response.data.data.map((loc: any) => ({
+                const options = response.data.data.map((loc: { id: number; title: string }) => ({
                     value: loc.id,
                     label: loc.title,
                 }));
@@ -40,13 +36,13 @@ const LocationAutocomplete = ({ value, onChange }: LocationAutocompleteProps) =>
         }, 500); // تأخير 500ms
     };
 
-    const handleChange = (selectedOptions: any) => {
-        onChange(selectedOptions || []);
+    const handleChange = (selectedOptions: SelectOption | null) => {
+        onChange(selectedOptions || null);
     };
 
     return (
         <AsyncSelect
-            isMulti
+      isMulti={false}
             cacheOptions
             loadOptions={loadOptions}
             defaultOptions

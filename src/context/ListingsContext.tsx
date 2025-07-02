@@ -1,5 +1,6 @@
 import React, { useState, useCallback, createContext, useContext } from 'react';
 import axios from 'axios';
+import ErrorToast from '../components/ui/ErrorToast';
 
 export interface Listing {
     id: string;
@@ -23,8 +24,8 @@ export interface Pagination {
 }
 
 interface FetchOptions {
-    filters: { [key: string]: any };
-    sort: { sortBy: string; sortDirection: string };
+    filters: { [key: string]: string | number | boolean };
+    sort: { sortBy: string; sortDirection: string } | null;
     page?: number;
 }
 
@@ -34,6 +35,8 @@ interface ListingsContextType {
     loading: boolean;
     error: string | null;
     fetchListings: (options: FetchOptions) => void;
+    showErrorToast: boolean;
+    setShowErrorToast: (show: boolean) => void;
 }
 
 const ListingsContext = createContext<ListingsContextType | null>(null);
@@ -43,6 +46,7 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
     const [pagination, setPagination] = useState<Pagination | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showErrorToast, setShowErrorToast] = useState(false);
 
     const fetchListings = useCallback(async ({ filters, sort, page = 1 }: FetchOptions) => {
         setLoading(true);
@@ -51,10 +55,10 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
             const params = new URLSearchParams();
             
             Object.keys(filters).forEach(key => {
-                if (filters[key]) params.append(key, filters[key]);
+                if (filters[key]) params.append(key, String(filters[key]));
             });
 
-            if (sort.sortBy) {
+            if (sort && sort.sortBy) {
                 params.append(`sort[${sort.sortBy}]`, sort.sortDirection);
             }
 
@@ -82,16 +86,33 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
             
             setPagination(newPagination);
 
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to fetch listings.");
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to fetch listings. Please try again.";
+            setError(errorMessage);
+            setShowErrorToast(true);
         } finally {
             setLoading(false);
         }
     }, []);
 
     return (
-        <ListingsContext.Provider value={{ listings, pagination, loading, error, fetchListings }}>
+        <ListingsContext.Provider value={{ 
+            listings, 
+            pagination, 
+            loading, 
+            error, 
+            fetchListings,
+            showErrorToast,
+            setShowErrorToast
+        }}>
             {children}
+            {showErrorToast && error && (
+                <ErrorToast 
+                    show={showErrorToast}
+                    message={error} 
+                    onClose={() => setShowErrorToast(false)} 
+                />
+            )}
         </ListingsContext.Provider>
     );
 };

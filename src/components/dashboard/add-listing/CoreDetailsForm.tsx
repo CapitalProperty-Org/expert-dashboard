@@ -1,62 +1,351 @@
-import { ChevronLeft, ChevronRight, Home, Building, Building2, Tag } from 'lucide-react';
-import type { ListingAction, ListingState } from "../../../types";
+import React, { useEffect } from "react";
+import type { ListingAction, ListingState, SelectOption } from "../../../types";
 import CustomSelect from "../../ui/CustomSelect";
-import InfoTooltip from "../../ui/InfoTooltip";
 import SegmentedControl from "../../ui/SegmentedControl";
+import FormLabel from "../../ui/FormLabel";
+import LocationAutocomplete from "../../ui/LocationAutocomplete";
 import { DayPicker } from "react-day-picker";
-import { useState } from "react";
-import 'react-day-picker/dist/style.css';
-import FormLabel from '../../ui/FormLabel';
+import "react-day-picker/dist/style.css";
+import { Home, Building, BadgeDollarSign, BadgePercent } from "lucide-react";
 
-interface FormProps { state: ListingState; dispatch: React.Dispatch<ListingAction>; onComplete: () => void; }
+interface FormProps {
+  state: ListingState;
+  dispatch: React.Dispatch<ListingAction>;
+  onComplete: () => void;
+  agents: SelectOption[];
+  isLoadingAgents: boolean;
+}
 
-const CoreDetailsForm = ({ state, dispatch, onComplete }: FormProps) => {
-  const [showCalendar, setShowCalendar] = useState(false);
-  const updateField = (field: keyof ListingState, value: any) => {
-    dispatch({ type: 'UPDATE_FIELD', field, value });
-    // A simple check to "complete" the step
-    const { emirate, category, offeringType, propertyType, propertyLocation } = { ...state, [field]: value };
-    if (emirate && category && offeringType && propertyType && propertyLocation) {
-        onComplete();
+const CoreDetailsForm = ({
+  state,
+  dispatch,
+  onComplete,
+  agents,
+}: FormProps) => {
+  const updateField = (
+    field: keyof ListingState,
+    value: string | SelectOption | null | Date
+  ) => {
+    if (field === "uae_emirate") {
+      dispatch({ type: "RESET_PERMIT" });
     }
+    if (
+      field === "uae_emirate" ||
+      field === "category" ||
+      field === "offeringType"
+    ) {
+      dispatch({ type: "UPDATE_FIELD", field: "propertyType", value: "" });
+    }
+    dispatch({ type: "UPDATE_FIELD", field, value });
   };
 
+  useEffect(() => {
+    const {
+      uae_emirate,
+      category,
+      offeringType,
+      propertyType,
+      propertyLocation,
+      assignedAgent,
+      reference,
+      permitType,
+      reraPermitNumber,
+      dtcmPermitNumber,
+    } = state;
+    const baseConditionsMet =
+      uae_emirate &&
+      category &&
+      offeringType &&
+      propertyType &&
+      propertyLocation &&
+      assignedAgent &&
+      reference;
+    const dubaiPermitConditionsMet =
+      uae_emirate === "dubai"
+        ? permitType &&
+          (permitType === "none" ||
+            (reraPermitNumber && reraPermitNumber.length > 5) ||
+            (dtcmPermitNumber && dtcmPermitNumber.length > 5))
+        : true;
+    if (baseConditionsMet && dubaiPermitConditionsMet) {
+      onComplete();
+    }
+  }, [state, onComplete]);
+
+  const getPropertyTypeOptions = () => {
+    if (state.category === "residential")
+      return [
+        { value: 'apartment', label: "Apartment" },
+        { value: 'bulk units', label: "Bulk Units" },
+        { value: 'bungalow', label: "Bungalow" },
+        { value: 'compound', label: "Compound" },
+        { value: 'duplex', label: "Duplex" },
+        { value: 'full floor', label: "Full Floor" },
+        { value: 'half floor', label: "Half Floor" },
+        { value: 'hotel apartment', label: "Hotel Apartment" },
+        { value: 'penthouse', label: "Penthouse" },
+        { value: 'townhouse', label: "Townhouse" },
+        { value: 'villa', label: "Villa" },
+        { value: 'whole building', label: "Whole Building" },
+      ];
+    if (state.category === "commercial")
+      return [
+        { value: 'bulk units', label: "Bulk Units" },
+        { value: 'business center', label: "Business Center" },
+        { value: 'coworking spaces', label: "Coworking spaces" },
+        { value: 'factory', label: "Factory" },
+        { value: 'farm', label: "Farm" },
+        { value: 'full floor', label: "Full Floor" },
+        { value: 'half floor', label: "Half Floor" },
+        { value: 'labor camp', label: "Labor Camp" },
+        { value: 'land', label: "Land" },
+        { value: 'office space', label: "Office Space" },
+        { value: 'retail', label: "Retail" },
+        { value: 'showroom', label: "Showroom" },
+        { value: 'staff recommended', label: "Staff Recommended" },
+        { value: 'villa', label: "Villa" },
+        { value: 'warehouse', label: "Warehouse" },
+        { value: 'whole building', label: "Whole Building" },
+      ];
+    return [];
+  };
+
+  // ترتيب الحقول حسب المطلوب في الصور
   return (
     <div className="space-y-6">
-      <FormLabel text="Emirate" required><CustomSelect placeholder="Select an option" options={[{value: 'dubai', label: 'Dubai'}, {value: 'abu_dhabi', label: 'Abu Dhabi'}]} value={state.emirate} onChange={(val) => updateField('emirate', val)} /></FormLabel>
-      {state.emirate === 'dubai' && (<FormLabel text="Permit type" required><div className="flex items-center absolute -top-1 -right-1"><InfoTooltip content="Permit type info"/></div><SegmentedControl options={[{label: 'RERA', value: 'rera'}, {label: 'DTCM', value: 'dtcm'}, {label: 'None (DIFC only)', value: 'none'}]} value={state.permitType} onChange={(val) => updateField('permitType', val)} /></FormLabel>)}
-      {state.permitType === 'rera' && (<FormLabel text="RERA permit number" required><div className="flex items-center gap-2"><input type="text" className="w-full p-2.5 border rounded-lg" value={state.reraPermitNumber} onChange={e => updateField('reraPermitNumber', e.target.value)} /><button className="bg-white border text-gray-700 font-semibold py-2.5 px-4 rounded-lg">Verify</button></div></FormLabel>)}
-       
-      <FormLabel text="Category" required><SegmentedControl options={[{label: 'Residential', value: 'residential', icon: <Home size={16}/>}, {label: 'Commercial', value: 'commercial', icon: <Building size={16}/>}]} value={state.category} onChange={(val) => updateField('category', val)} /></FormLabel>
-      <FormLabel text="Offering type" required><SegmentedControl options={[{label: 'Rent', value: 'rent', icon: <Building2 size={16}/>}, {label: 'Sale', value: 'sale', icon: <Tag size={16}/>}]} value={state.offeringType} onChange={(val) => updateField('offeringType', val)} /></FormLabel>
-      
-      <FormLabel text="Property type" required><CustomSelect placeholder="Select an option" options={[{value: 'Apartment', label: 'Apartment'}, {value: 'Villa', label: 'Villa'}]} value={state.propertyType} onChange={(val) => updateField('propertyType', val)} /></FormLabel>
-      <FormLabel text="Property location" required><input type="text" placeholder="City, community or building" className="w-full p-2.5 border rounded-lg" value={state.propertyLocation} onChange={e => updateField('propertyLocation', e.target.value)} /></FormLabel>
-      <FormLabel text="Assigned agent" required><input type="text" className="w-full p-2.5 border rounded-lg" value={state.assignedAgent} onChange={e => updateField('assignedAgent', e.target.value)} /></FormLabel>
-      
-      <FormLabel text="Reference" required>
-        <div className="relative">
-          <input type="text" className="w-full p-2.5 border rounded-lg pr-12" value={state.reference} onChange={e => updateField('reference', e.target.value)} />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">0/50</span>
-        </div>
+      {/* Emirate */}
+      <FormLabel text="Emirate" required>
+        <CustomSelect
+          placeholder="Select an option"
+          options={[
+            { value: "dubai", label: "Dubai" },
+            { value: "abu_dhabi", label: "Abu Dhabi" },
+            { value: "northern_emirates", label: "Northern Emirates" },
+          ]}
+          value={
+            state.uae_emirate
+              ? {
+                  value: state.uae_emirate,
+                  label:
+                    state.uae_emirate === "dubai"
+                      ? "Dubai"
+                      : state.uae_emirate === "abu_dhabi"
+                      ? "Abu Dhabi"
+                      : "Northern Emirates",
+                }
+              : null
+          }
+          onChange={(val) =>
+            updateField("uae_emirate", val ? (val.value as string) : "")
+          }
+        />
       </FormLabel>
 
-      <FormLabel text="Available">
-        <div className="flex items-center gap-2">
-          <button onClick={() => { updateField('available', 'immediately'); setShowCalendar(false); }} className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-colors border ${state.available === 'immediately' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white border-gray-300'}`}>Immediately</button>
-          <button onClick={() => { updateField('available', 'fromDate'); setShowCalendar(true); }} className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold transition-colors border ${state.available === 'fromDate' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white border-gray-300'}`}>From date</button>
-        </div>
-        {showCalendar && state.available === 'fromDate' && (
-          <div className="mt-2 border rounded-lg p-2">
-            <DayPicker 
-              mode="single" 
-              selected={state.availableDate || undefined} 
-              onSelect={(date) => updateField('availableDate', date)} 
-              components={{ IconLeft: () => <ChevronLeft size={16}/>, IconRight: () => <ChevronRight size={16}/> }}
+      {/* Permit type (Dubai only) - يظهر فقط إذا تم اختيار Emirate */}
+      {state.uae_emirate && state.uae_emirate === "dubai" && (
+        <>
+          <FormLabel text="Permit type" required>
+            <SegmentedControl
+              options={[
+                { label: "RERA", value: "rera" },
+                { label: "DTCM", value: "dtcm" },
+                { label: "None (DIFC only)", value: "none" },
+              ]}
+              value={state.permitType}
+              onChange={(val) => updateField("permitType", val)}
             />
-          </div>
+          </FormLabel>
+          {/* RERA permit number */}
+          {state.permitType === "rera" && (
+            <FormLabel text="RERA permit number" required>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  className="w-full p-2.5 border rounded-lg"
+                  value={state.reraPermitNumber}
+                  onChange={(e) =>
+                    updateField("reraPermitNumber", e.target.value)
+                  }
+                />
+                <button className="bg-white border border-violet-600 text-violet-700 font-semibold py-2.5 px-4 rounded-lg hover:bg-violet-50 transition">
+                  Validate
+                </button>
+              </div>
+              {!state.reraPermitNumber && (
+                <p className="text-xs text-red-500 mt-1">Required</p>
+              )}
+            </FormLabel>
+          )}
+          {/* DTCM permit number */}
+          {state.permitType === "dtcm" && (
+            <FormLabel text="DTCM permit number" required>
+              <input
+                type="text"
+                className="w-full p-2.5 border rounded-lg"
+                value={state.dtcmPermitNumber}
+                onChange={(e) =>
+                  updateField("dtcmPermitNumber", e.target.value)
+                }
+              />
+              {!state.dtcmPermitNumber && (
+                <p className="text-xs text-red-500 mt-1">Required</p>
+              )}
+            </FormLabel>
+          )}
+        </>
+      )}
+
+      {/* Category - يظهر فقط إذا تم اختيار Emirate (و Permit type إذا كان Dubai) */}
+      {state.uae_emirate &&
+        (state.uae_emirate !== "dubai" ||
+          (state.permitType &&
+            (state.permitType === "none" ||
+              (state.reraPermitNumber && state.reraPermitNumber.length > 5) ||
+              (state.dtcmPermitNumber &&
+                state.dtcmPermitNumber.length > 5)))) && (
+          <FormLabel text="Category" required>
+            <SegmentedControl
+              options={[
+                {
+                  label: "Residential",
+                  value: "residential",
+                  icon: <Home size={20} />,
+                },
+                {
+                  label: "Commercial",
+                  value: "commercial",
+                  icon: <Building size={20} />,
+                },
+              ]}
+              value={state.category}
+              onChange={(val) => updateField("category", val)}
+            />
+          </FormLabel>
         )}
-      </FormLabel>
+
+      {/* Offering type - يظهر فقط إذا تم اختيار Category */}
+      {state.category && (
+        <FormLabel text="Offering type" required>
+          <SegmentedControl
+            options={[
+              {
+                label: "Rent",
+                value: "rent",
+                icon: <BadgePercent size={20} />,
+              },
+              {
+                label: "Sale",
+                value: "sale",
+                icon: <BadgeDollarSign size={20} />,
+              },
+            ]}
+            value={state.offeringType}
+            onChange={(val) => updateField("offeringType", val)}
+          />
+        </FormLabel>
+      )}
+
+      {/* Rental period (Rent only) - يظهر فقط إذا تم اختيار Offering type = rent */}
+      {state.offeringType === "rent" && (
+        <FormLabel text="Rental period" required>
+          <CustomSelect
+            options={[
+              { value: "yearly", label: "Per year" },
+              { value: "monthly", label: "Per month" },
+              { value: "weekly", label: "Per week" },
+              { value: "daily", label: "Per day" },
+            ]}
+            value={
+              state.rentalPeriod
+                ? {
+                    value: state.rentalPeriod,
+                    label:
+                      state.rentalPeriod === "yearly"
+                        ? "Per year"
+                        : "Per month",
+                  }
+                : null
+            }
+            onChange={(val) =>
+              updateField("rentalPeriod", val ? (val.value as string) : null)
+            }
+            placeholder="Select rental period"
+          />
+        </FormLabel>
+      )}
+
+      {/* Property type - يظهر فقط إذا تم اختيار Offering type و Rental period (إذا كان rent) */}
+      {state.offeringType &&
+        (state.offeringType === "sale" ||
+          (state.offeringType === "rent" && state.rentalPeriod)) && (
+          <FormLabel text="Property type" required>
+            <CustomSelect
+              placeholder="Select property type"
+              options={getPropertyTypeOptions()}
+              value={
+                state.propertyType
+                  ? { value: state.propertyType, label: state.propertyType }
+                  : null
+              }
+              onChange={(val) =>
+                updateField("propertyType", val ? (val.value as string) : "")
+              }
+            />
+          </FormLabel>
+        )}
+
+      {/* باقي الحقول - تظهر فقط إذا تم اختيار Property type */}
+      {state.propertyType && (
+        <>
+          <FormLabel text="Property location" required>
+            <LocationAutocomplete
+              value={state.propertyLocation}
+              onChange={(val) => updateField("propertyLocation", val)}
+            />
+          </FormLabel>
+          <FormLabel text="Assigned agent" required>
+            <CustomSelect
+              options={agents}
+              value={state.assignedAgent}
+              onChange={(val) => updateField("assignedAgent", val)}
+              placeholder="Select an agent"
+            />
+          </FormLabel>
+          <FormLabel text="Reference" required>
+            <div className="relative">
+              <input
+                type="text"
+                className="w-full p-2.5 border rounded-lg pr-12"
+                value={state.reference}
+                onChange={(e) => updateField("reference", e.target.value)}
+                maxLength={50}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                {state.reference.length}/50
+              </span>
+            </div>
+          </FormLabel>
+          <FormLabel text="Available">
+            <SegmentedControl
+              options={[
+                { label: "Immediately", value: "immediately" },
+                { label: "From date", value: "fromDate" },
+              ]}
+              value={state.available}
+              onChange={(val) => updateField("available", val)}
+            />
+            {state.available === "fromDate" && (
+              <div className="mt-2 border rounded-lg p-2 inline-block">
+                <DayPicker
+                  mode="single"
+                  selected={state.availableDate || undefined}
+                  onSelect={(date) => updateField("availableDate", date)}
+                />
+              </div>
+            )}
+          </FormLabel>
+        </>
+      )}
     </div>
   );
 };

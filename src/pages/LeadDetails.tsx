@@ -26,13 +26,14 @@ const LeadDetails = () => {
         axios.get(`${import.meta.env.VITE_BASE_URL}/api/agent-opportunities/${id}`)
             .then(response => {
                 const data = response.data;
+                console.log(data)
                 // تحويل البيانات لتكون متوافقة مع حالة الفورم
                 setLeadData({
                     fullName: data.fullName,
                     phoneNumber: data.mobile.replace('+971', ''), // مثال بسيط
                     email: data.email,
-                    status: data.status,
-                    assignedTo: data.userId,
+                    status: { value: data.status, label: data.status },
+                    assignedTo: data.userId ? { value: data.userId, label: `Agent ${data.userId}` } : '',
                     leadType: data.type,
                     propertyCategory: data.category,
                     purposeOfBuying: data.purpose,
@@ -47,7 +48,7 @@ const LeadDetails = () => {
                     readinessToBuy: data.readinessToBuy,
                     purchasePeriod: data.purchasePeriod,
                     moveInPeriod: data.moveInPeriod, // افترض أنه لا يوجد
-                    preferredLocations: data.locations.map((loc: any) => ({ value: loc.id, label: loc.name_en })),
+                    preferredLocations: data.locations ? data.locations.map((loc: any) => ({ value: loc.id, label: loc.name_en })) : [],
                     note: data.note || ''
                 });
             })
@@ -74,8 +75,8 @@ const LeadDetails = () => {
         fullName: leadData.fullName,
         mobile: `+971${leadData.phoneNumber}`,
         email: leadData.email,
-        status: leadData.status,
-        userId: Number(leadData.assignedTo) || undefined,
+        status: typeof leadData.status === 'object' && leadData.status && 'value' in leadData.status ? (leadData.status as { value: string }).value : (leadData.status ?? ''),
+        userId: typeof leadData.assignedTo === 'object' && leadData.assignedTo && 'value' in leadData.assignedTo ? Number((leadData.assignedTo as { value: string | number }).value) : (leadData.assignedTo ? Number(leadData.assignedTo) : undefined),
         
         // Requirements
         propertyType: leadData.propertyType,
@@ -83,7 +84,7 @@ const LeadDetails = () => {
         priceTo: Number(leadData.priceTo) || null,
         sizeFrom: Number(leadData.sizeFrom) || null,
         sizeTo: Number(leadData.sizeTo) || null,
-        preferredLocation: leadData.preferredLocations.map((loc: any) => loc.value), // إرسال مصفوفة من الـ IDs
+        preferredLocation: leadData.preferredLocations && leadData.preferredLocations.value ? [leadData.preferredLocations.value] : [],
         note: leadData.note,
         type: leadData.leadType,
         category: leadData.propertyCategory,
@@ -91,8 +92,7 @@ const LeadDetails = () => {
         beds: leadData.bedrooms,
         furnishingType: leadData.furnishingType,
         purpose: leadData.purposeOfBuying,
-                            moveInPeriod: leadData.moveInPeriod, // افترض أنه لا يوجد
-
+        moveInPeriod: leadData.moveInPeriod,
         purchasePeriod: leadData.purchasePeriod,
         readinessToBuy: leadData.readinessToBuy,
     };
@@ -100,6 +100,9 @@ const LeadDetails = () => {
         try {
             await axios.patch(`${import.meta.env.VITE_BASE_URL}/api/agent-opportunities/${id}`, payload);
             setSuccess("Changes saved successfully!");
+            setTimeout(() => {
+                navigate('/leads-regular-management');
+            }, 3200);
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to save changes.');
         } finally {

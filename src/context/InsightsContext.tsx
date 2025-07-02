@@ -48,7 +48,7 @@ interface InsightsContextType {
     whatsAppInsights: WhatsAppInsightsData | null;
     callsInsights: CallsInsightsData | null;
     whatsAppDaily: DayHourData | null;
-    whatsappHourly: DayHourData | null; // <-- تم التصحيح هنا
+    whatsappHourly: DayHourData | null; 
     callsDaily: DayHourData | null;
     callsHourly: DayHourData | null;
     loading: boolean;

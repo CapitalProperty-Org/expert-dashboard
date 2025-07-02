@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MoreHorizontal, Edit2, Eye, Trash2 } from 'lucide-react';
 import axios from 'axios';
-import { useConfirmationModal } from '../../hooks/useConfirmationModal'; // <-- استيراد الـ Hook
+import { useConfirmationModal } from '../../hooks/useConfirmationModal';
+import ErrorToast from './ErrorToast';
+import SuccessToast from './SuccessToast';
 
 interface ArchiveTableActionMenuProps {
     listingId: string;
@@ -11,6 +13,9 @@ interface ArchiveTableActionMenuProps {
 const ArchiveTableActionMenu = ({ listingId, onActionComplete }: ArchiveTableActionMenuProps) => {
     const { openModal, ConfirmationModalComponent } = useConfirmationModal();
     const [isOpen, setIsOpen] = useState(false);
+    const [showErrorToast, setShowErrorToast] = useState(false);
+    const [showSuccessToast, setShowSuccessToast] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -26,10 +31,11 @@ const ArchiveTableActionMenu = ({ listingId, onActionComplete }: ArchiveTableAct
     const handleUnarchive = async () => {
         try {
             await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${listingId}/unarchive`);
-            alert('Listing unarchived successfully!');
+            setShowSuccessToast(true);
             onActionComplete();
         } catch (error) {
-            alert('Failed to unarchive listing.');
+            setErrorMessage('Failed to unarchive listing.');
+            setShowErrorToast(true);
             console.error('Error unarchiving:', error);
         }
     };
@@ -75,6 +81,22 @@ const ArchiveTableActionMenu = ({ listingId, onActionComplete }: ArchiveTableAct
                 )}
             </div>
             {ConfirmationModalComponent}
+            
+            {showErrorToast && (
+                <ErrorToast 
+                    show={showErrorToast}
+                    message={errorMessage} 
+                    onClose={() => setShowErrorToast(false)} 
+                />
+            )}
+            
+            {showSuccessToast && (
+                <SuccessToast 
+                    show={showSuccessToast}
+                    message="Listing unarchived successfully!" 
+                    onClose={() => setShowSuccessToast(false)} 
+                />
+            )}
         </>
     );
 };

@@ -20,9 +20,11 @@ const Requirements = ({ leadData, handleStateUpdate, handleButtonGroupToggle }: 
     const isResidential = leadData.propertyCategory === 'residential';
     const propertyTypes = isResidential ? LeadData.propertyTypeOptionsResidential : LeadData.propertyTypeOptionsCommercial;
 
+    console.log(leadData)
+
     return (
         <div className="space-y-2">
-            {isBuyer && <FormRow><FormLabel icon={<CheckSquare />} text="Purpose of buying" /><MultiSelectButtonGroup options={LeadData.purposeOfBuyingOptions} selected={leadData.purposeOfBuying} onToggle={(opt) => handleButtonGroupToggle('purposeOfBuying', opt)} /></FormRow>}
+            {isBuyer && <FormRow><FormLabel icon={<CheckSquare />} text="Purpose of buying" /><MultiSelectButtonGroup options={['Own living', 'Resell', 'For renting', 'Investment']} selected={leadData.purposeOfBuying} onToggle={(val) => handleButtonGroupToggle('purposeOfBuying', val)} /></FormRow>}
             <FormRow><FormLabel icon={isResidential ? <Home /> : <Building />} text="Property type" /><MultiSelectButtonGroup options={propertyTypes} selected={leadData.propertyType} onToggle={(opt) => handleButtonGroupToggle('propertyType', opt)} /></FormRow>
             <FormRow><FormLabel icon={<Home />} text="Property size, sqft" /><div className="col-span-3 flex items-center gap-2"><input placeholder="From" value={leadData.sizeFrom} onChange={e => handleStateUpdate('sizeFrom', e.target.value)} className="w-full p-2.5 border rounded-lg" /><span className="text-gray-400">-</span><input placeholder="To" value={leadData.sizeTo} onChange={e => handleStateUpdate('sizeTo', e.target.value)} className="w-full p-2.5 border rounded-lg" /></div></FormRow>
             <FormRow><FormLabel icon={<DollarSign />} text="Property price (AED)" /><div className="col-span-3 flex items-center gap-2"><input placeholder="From" value={leadData.priceFrom} onChange={e => handleStateUpdate('priceFrom', e.target.value)} className="w-full p-2.5 border rounded-lg" /><span className="text-gray-400">-</span><input placeholder="To" value={leadData.priceTo} onChange={e => handleStateUpdate('priceTo', e.target.value)} className="w-full p-2.5 border rounded-lg" /></div></FormRow>
@@ -76,7 +78,14 @@ export const LeadTypeAndRequirementsForm = ({ leadData, handleStateUpdate, handl
             <FormSection title="Lead Type"><SegmentedControl options={[{label: 'Buyer', value: 'buyer'}, {label: 'Tenant', value: 'tenant'}]} value={leadData.leadType} onChange={(v) => handleStateUpdate('leadType', v)} /></FormSection>
             <FormSection title="Requirements">
                 <div className="space-y-2">
-                    <FormRow><FormLabel icon={<Home />} text="Property category" /><SegmentedControl options={[{label: 'Residential', value: 'residential'}, {label: 'Commercial', value: 'commercial'}]} value={leadData.propertyCategory} onChange={(v) => handleStateUpdate('propertyCategory', v)} className="w-auto col-span-3" /></FormRow>
+                    <FormRow>
+                        <FormLabel icon={<Home />} text="Property category" />
+                        <MultiSelectButtonGroup
+                            options={['residential', 'commercial']}
+                            selected={leadData.propertyCategory}
+                            onToggle={(val) => { console.log(val); handleStateUpdate('propertyCategory', val); }}
+                        />
+                    </FormRow>
                     <div className="pt-4 border-t border-gray-100">
                         <Requirements leadData={leadData} handleStateUpdate={handleStateUpdate} handleButtonGroupToggle={handleButtonGroupToggle} />
                     </div>

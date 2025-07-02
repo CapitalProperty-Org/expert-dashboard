@@ -25,7 +25,7 @@ interface LeadsContextType {
     pagination: Pagination | null;
     loading: boolean;
     error: string | null;
-    fetchLeads: (filters: any) => void;
+    fetchLeads: (filters: { [key: string]: string | number | boolean }) => void;
 }
 
 const LeadsContext = createContext<LeadsContextType | null>(null);
@@ -36,11 +36,11 @@ export const LeadsProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchLeads = useCallback(async (filters: any) => {
+    const fetchLeads = useCallback(async (filters: { [key: string]: string | number | boolean }) => {
         setLoading(true);
         setError(null);
         try {
-            const params: { [key: string]: any } = {};
+            const params: { [key: string]: string | number | boolean } = {};
             
              // direct filters
        if (filters.query) params.query = filters.query;
@@ -61,8 +61,9 @@ export const LeadsProvider = ({ children }: { children: React.ReactNode }) => {
 
             setLeads(response.data.data);
             setPagination(response.data.pagination);
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to fetch leads.");
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to fetch leads.";
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

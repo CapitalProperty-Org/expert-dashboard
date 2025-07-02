@@ -10,8 +10,11 @@ import { useListings } from '../context/ListingsContext';
 import { useDebounce } from '../hooks/useDebounce';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import BulkActionBar from '../components/dashboard/BulkActionBar';
+import ErrorToast from '../components/ui/ErrorToast';
+import SuccessToast from '../components/ui/SuccessToast';
 import axios from 'axios';
 import { useConfirmationModal } from '../hooks/useConfirmationModal';
+import type { Listing } from '../context/ListingsContext';
 
 const sortOptions = [
     { label: "Listing Created: Newest", value: { sortBy: 'created_at', sortDirection: 'desc' } },
@@ -30,10 +33,12 @@ const initialFilters = {
 const ListingsManagement = () => {
     const { listings, pagination, loading, error, fetchListings } = useListings();
     const { openModal, ConfirmationModalComponent } = useConfirmationModal();
-    const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
-    const [isSubmittingAction, setIsSubmittingAction] = useState(false);
     
-    // ... (باقي الحالات والدوال السابقة) ...
+    const getPriceValue = (listing: Listing): number => {
+        if (!listing.price || !listing.price.amounts) return 0;
+        return Object.values(listing.price.amounts)[0] || 0;
+    };
+    
     const [filters, setFilters] = useState(initialFilters);
     const [sort, setSort] = useState(sortOptions[0].value);
     const [currentSortLabel, setCurrentSortLabel] = useState(sortOptions[0].label);
@@ -43,25 +48,38 @@ const ListingsManagement = () => {
     const [isFiltersModalOpen, setFiltersModalOpen] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string>('');
+    const [showError, setShowError] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string>('');
+    const [showSuccess, setShowSuccess] = useState(false);
     
     const applyFiltersAndFetch = useCallback(() => {
-        const activeFilters = { ...filters, search: debouncedSearch };
+        const activeFilters: Record<string, string | boolean> = { ...filters, search: debouncedSearch };
         Object.keys(activeFilters).forEach(key => {
             const filterKey = key as keyof typeof activeFilters;
+            if (
+                typeof activeFilters[filterKey] === 'object' &&
+                activeFilters[filterKey] !== null &&
+                'value' in (activeFilters[filterKey] as any)
+            ) {
+                activeFilters[filterKey] = (activeFilters[filterKey] as { value: string }).value;
+            }
             if (!activeFilters[filterKey]) delete activeFilters[filterKey];
         });
-        fetchListings({ filters: activeFilters, sort });
+        
+        const sortToSend = sort.sortBy === 'price' ? null : sort;
+        fetchListings({ filters: activeFilters, sort: sortToSend });
     }, [filters, debouncedSearch, sort, fetchListings]);
 
     useEffect(() => {
         applyFiltersAndFetch();
     }, [applyFiltersAndFetch]);
 
-    const handleApplyModalFilters = (newFiltersFromModal: { [key: string]: any }) => {
+    const handleApplyModalFilters = (newFiltersFromModal: typeof initialFilters) => {
         setFilters(newFiltersFromModal);
     };
 
-    const handleSortChange = (newSortOption: { label: string, value: any }) => {
+    const handleSortChange = (newSortOption: { label: string, value: { sortBy: string; sortDirection: string } }) => {
         setSort(newSortOption.value);
         setCurrentSortLabel(newSortOption.label);
         setSortOpen(false);
@@ -92,8 +110,10 @@ const ListingsManagement = () => {
         applyFiltersAndFetch();
     };
 
-   const handleBulkAction = async (action: 'publish' | 'archive' | 'unarchive' | 'reject' | 'reassign', data?: any) => {
-        setIsSubmittingAction(true);
+       const handleBulkAction = async (
+        action: 'publish' | 'archive' | 'unarchive' | 'reject' | 'reassign',
+        data?: Record<string, unknown>
+    ) => {
         const promises = Array.from(selectedIds).map(id => {
             const endpoint = `${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/${action}`;
             return axios.post(endpoint, data);
@@ -101,14 +121,14 @@ const ListingsManagement = () => {
         
         try {
             await Promise.all(promises);
-            alert(`Successfully performed ${action} on ${selectedIds.size} listings.`);
+            setSuccessMessage(`Successfully performed ${action} on ${selectedIds.size} listings.`);
+            setShowSuccess(true);
             handleActionComplete();
             setSelectedIds(new Set());
             setIsSelectionMode(false);
-        } catch (err) {
-            alert(`Failed to perform ${action}. Please try again.`);
-        } finally {
-            setIsSubmittingAction(false);
+        } catch {
+            setErrorMessage(`Failed to perform ${action}. Please try again.`);
+            setShowError(true);
         }
     };
 
@@ -123,13 +143,6 @@ const ListingsManagement = () => {
         });
     };
 
-    //  const handleReassign = async (agentId: string) => {
-    //     await handleBulkAction('reassign', { assigned_to_id: agentId });
-    //     setIsReassignModalOpen(false);
-    // };
-
-
-
     const handleDeselectAll = () => {
         setSelectedIds(new Set());
         setIsSelectionMode(false);
@@ -137,15 +150,38 @@ const ListingsManagement = () => {
 
     const renderContent = () => {
         if (loading) return <div className="flex justify-center items-center h-full"><LoadingSpinner /></div>;
-        if (error) return <div className="text-center text-red-500 py-16">{error}</div>;
+        if (error) {
+            // عرض ErrorToast بدلاً من النص العادي
+            if (!showError) {
+                setErrorMessage(error);
+                setShowError(true);
+            }
+            return <ListingsEmptyState />;
+        }
         if (listings.length === 0) return <ListingsEmptyState />;
         
+        const sortedListings = [...listings].sort((a, b) => {
+            if (sort.sortBy === 'price') {
+                const priceA = getPriceValue(a);
+                const priceB = getPriceValue(b);
+                return sort.sortDirection === 'desc' ? priceB - priceA : priceA - priceB;
+            }
+            
+            if (sort.sortBy === 'created_at') {
+                const dateA = new Date(a.created_at).getTime();
+                const dateB = new Date(b.created_at).getTime();
+                return sort.sortDirection === 'desc' ? dateB - dateA : dateA - dateB;
+            }
+            
+            return 0;
+        });
+        
         if (viewMode === 'list') {
-            return <ListingsTable listings={listings} isSelectionMode={isSelectionMode} selectedIds={selectedIds} onSelectionChange={handleSelectionChange} onSelectAll={handleSelectAll} onActionComplete={handleActionComplete} />;
+            return <ListingsTable listings={sortedListings} isSelectionMode={isSelectionMode} selectedIds={selectedIds} onSelectionChange={handleSelectionChange} onSelectAll={handleSelectAll} onActionComplete={handleActionComplete} />;
         } else {
             return (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {listings.map(listing => <PropertyCard key={listing.id} listing={listing} onActionComplete={handleActionComplete} />)}
+                    {sortedListings.map(listing => <PropertyCard key={listing.id} listing={listing} onActionComplete={handleActionComplete} />)}
                 </div>
             );
         }
@@ -153,9 +189,18 @@ const ListingsManagement = () => {
     
     return (
         <>
-                       {isFiltersModalOpen && <MoreFiltersModal onClose={() => setFiltersModalOpen(false)} initialFilters={filters} onApply={handleApplyModalFilters} />}
-        {/* {isReassignModalOpen && <ReassignModal isOpen={isReassignModalOpen} onClose={() => setIsReassignModalOpen(false)} onReassign={handleReassign} selectedCount={selectedIds.size} isReassigning={isSubmittingAction} />} */}
-                        {ConfirmationModalComponent}
+            {isFiltersModalOpen && <MoreFiltersModal onClose={() => setFiltersModalOpen(false)} initialFilters={filters} onApply={handleApplyModalFilters} />}
+            {ConfirmationModalComponent}
+            <ErrorToast 
+                message={errorMessage}
+                show={showError}
+                onClose={() => setShowError(false)}
+            />
+            <SuccessToast 
+                message={successMessage}
+                show={showSuccess}
+                onClose={() => setShowSuccess(false)}
+            />
 
             <div className="flex flex-col h-full bg-gray-50">
                 <div className="p-4 sm:p-6 md:p-8 space-y-4 lg:space-y-6 bg-gray-50 flex-shrink-0 z-10">
@@ -248,7 +293,7 @@ const ListingsManagement = () => {
                             </button>
                         )}
                         <Link to="/add-listing" className="w-full max-w-xs">
-                           <button className="bg-red-600 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 w-full hover:bg-red-700">
+                           <button className="bg-red-600 text-white font-semibold py-2.5 px-1 rounded-lg flex items-center justify-center gap-2 w-full hover:bg-red-700">
                                <Plus size={16} />List new property
                            </button>
                         </Link>

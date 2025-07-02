@@ -31,7 +31,7 @@ const initialFilters = {
 };
 
 const ListingsArchive = () => {
-    const { listings, pagination, loading, error, fetchListings } = useListings();
+    const { listings, pagination, loading, fetchListings } = useListings();
 
     const [filters, setFilters] = useState(initialFilters);
     const [sort, setSort] = useState(sortOptions[0].value);
@@ -56,17 +56,13 @@ const ListingsArchive = () => {
         applyFiltersAndFetch();
     }, [applyFiltersAndFetch]);
 
-    const handleApplyModalFilters = (newFiltersFromModal: { [key: string]: any }) => {
+    const handleApplyModalFilters = (newFiltersFromModal: typeof initialFilters) => {
         setFilters(newFiltersFromModal);
     };
     
-    // ## الخطوة 2: إنشاء دالة Reset خاصة بهذه الصفحة ##
-    const handleResetFilters = () => {
-        setFilters(initialFilters);
-        setFiltersModalOpen(false);
-    };
 
-    const handleSortChange = (newSortOption: { label: string, value: any }) => {
+
+    const handleSortChange = (newSortOption: { label: string, value: { sortBy: string; sortDirection: string } }) => {
         setSort(newSortOption.value);
         setCurrentSortLabel(newSortOption.label);
         setSortOpen(false);
@@ -74,7 +70,6 @@ const ListingsArchive = () => {
 
     const renderContent = () => {
         if (loading) return <div className="flex justify-center items-center h-full"><LoadingSpinner /></div>;
-        if (error) return <div className="text-center text-red-500 py-16">{error}</div>;
         if (listings.length === 0) return <ArchiveEmptyState />;
         return <ArchiveTable listings={listings} onActionComplete={applyFiltersAndFetch} />;
     };
@@ -86,7 +81,6 @@ const ListingsArchive = () => {
                     onClose={() => setFiltersModalOpen(false)}
                     initialFilters={filters}
                     onApply={handleApplyModalFilters}
-                    onReset={handleResetFilters} // <-- تمرير الدالة الصحيحة هنا
                 />
             )}
             
