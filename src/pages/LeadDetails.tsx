@@ -67,6 +67,32 @@ const LeadDetails = () => {
         setLeadData((prev: any) => ({ ...prev, [key]: prev[key] === value ? '' : value }));
     };
 
+    // دوال الفاليديشن (من LeadForms)
+    function validateEmail(email: string): boolean {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email) && email.includes('@') && email.includes('.com');
+    }
+    function validateRange(from: string, to: string): boolean {
+        if (!from || !to) return true;
+        const fromNum = parseFloat(from);
+        const toNum = parseFloat(to);
+        return !isNaN(fromNum) && !isNaN(toNum) && fromNum <= toNum;
+    }
+    // دالة التحقق من صحة الفورم
+    function isFormValid(leadData: any) {
+        if (
+            !leadData.fullName?.trim() ||
+            !leadData.phoneNumber?.trim() ||
+            !leadData.email?.trim() ||
+            !validateEmail(leadData.email) ||
+            (leadData.sizeFrom && leadData.sizeTo && !validateRange(leadData.sizeFrom, leadData.sizeTo)) ||
+            (leadData.priceFrom && leadData.priceTo && !validateRange(leadData.priceFrom, leadData.priceTo))
+        ) {
+            return false;
+        }
+        return true;
+    }
+
     const handleSaveChanges = async () => {
         setIsSubmitting(true);
         setError(null);
@@ -155,7 +181,7 @@ const LeadDetails = () => {
                         <div className="flex items-center justify-between gap-4 pt-4 border-t mt-6">
                             <div>
                                 <button onClick={() => navigate('/leads-regular-management')} className="bg-white border border-gray-300 text-gray-700 font-semibold py-2.5 px-6 rounded-lg hover:bg-gray-100">Cancel</button>
-                                <button onClick={handleSaveChanges} disabled={isSubmitting} className="ml-4 bg-red-600 text-white font-semibold py-2.5 px-6 rounded-lg disabled:bg-red-400 hover:bg-red-700">
+                                <button onClick={handleSaveChanges} disabled={isSubmitting || !isFormValid(leadData)} className="ml-4 bg-red-600 text-white font-semibold py-2.5 px-6 rounded-lg disabled:bg-red-400 hover:bg-red-700">
                                     {isSubmitting ? 'Saving...' : 'Save changes'}
                                 </button>
                             </div>

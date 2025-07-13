@@ -1,18 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapPin, BedDouble, Bath, Ruler, Check, Monitor, Smartphone, User, FileText, Home } from 'lucide-react';
 import type { ListingState } from '../../../types';
 
-const ListingPreview = ({ state }: { state: ListingState }) => {
+const ListingPreview = ({ state, images = [] }: { state: ListingState; images?: File[] }) => {
     
     const locationLabel = state.propertyLocation ? state.propertyLocation.label : 'Listing location';
     const agentLabel = state.assignedAgent ? state.assignedAgent.label : 'Agent Name';
-        console.log(state)
+    
+    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
+    useEffect(() => {
+        const newImagePreviews = images.map(file => URL.createObjectURL(file));
+        setImagePreviews(newImagePreviews);
+
+        return () => {
+            newImagePreviews.forEach(url => URL.revokeObjectURL(url));
+        };
+    }, [images]);
+
     const formatPrice = (price: string) => {
         if (!price) return 'AED -';
         const num = parseInt(price.replace(/,/g, ''), 10);
         if (isNaN(num)) return 'AED -';
         return `AED ${new Intl.NumberFormat('en-US').format(num)}`;
     };
+
     return (
         <div className="bg-white p-4 rounded-lg border border-gray-200/80 shadow-sm">
             <div className="flex justify-end items-center gap-2 mb-4">
@@ -24,9 +36,29 @@ const ListingPreview = ({ state }: { state: ListingState }) => {
             </div>
             <div className="max-h-[calc(100vh-12rem)] overflow-y-auto scrollbar-thin pr-2">
                 <div className="grid grid-cols-3 gap-2 mb-6">
-                    <div className="col-span-2 row-span-2 h-64 bg-gray-100 border-2 border-dashed rounded-lg flex items-center justify-center text-gray-300"><ImageIcon /></div>
-                    <div className="col-span-1 h-[124px] bg-gray-100 border-2 border-dashed rounded-lg flex items-center justify-center text-gray-300"><ImageIcon /></div>
-                    <div className="col-span-1 h-[124px] bg-gray-100 border-2 border-dashed rounded-lg flex items-center justify-center text-gray-300"><ImageIcon /></div>
+                    {imagePreviews.length > 0 ? (
+                        <>
+                            <div className="col-span-2 row-span-2 h-64 bg-gray-100 rounded-lg overflow-hidden">
+                                <img src={imagePreviews[0]} alt="cover" className="w-full h-full object-cover" />
+                            </div>
+                            {imagePreviews.length > 1 && (
+                                <div className="col-span-1 h-[124px] bg-gray-100 rounded-lg overflow-hidden">
+                                    <img src={imagePreviews[1]} alt="preview 1" className="w-full h-full object-cover" />
+                                </div>
+                            )}
+                             {imagePreviews.length > 2 && (
+                                <div className="col-span-1 h-[124px] bg-gray-100 rounded-lg overflow-hidden">
+                                    <img src={imagePreviews[2]} alt="preview 2" className="w-full h-full object-cover" />
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            <div className="col-span-2 row-span-2 h-64 bg-gray-100 border-2 border-dashed rounded-lg flex items-center justify-center text-gray-300"><ImageIcon /></div>
+                            <div className="col-span-1 h-[124px] bg-gray-100 border-2 border-dashed rounded-lg flex items-center justify-center text-gray-300"><ImageIcon /></div>
+                            <div className="col-span-1 h-[124px] bg-gray-100 border-2 border-dashed rounded-lg flex items-center justify-center text-gray-300"><ImageIcon /></div>
+                        </>
+                    )}
                 </div>
                 
                 <div className="flex justify-between items-start mb-2"><h2 className="text-2xl font-bold text-gray-900">{formatPrice(state.price)}</h2><div className="text-right text-xs text-gray-500"><Ruler size={14} className="inline-block mr-1"/>{state.size || '-'} sqft</div></div>

@@ -39,8 +39,8 @@ const Users = () => {
     const [error, setError] = useState<string | null>(null);
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedRole, setSelectedRole] = useState('');
-    const [selectedStatus, setSelectedStatus] = useState('');
+    const [selectedRole, setSelectedRole] = useState<{ value: string | number; label: string } | null>(null);
+    const [selectedStatus, setSelectedStatus] = useState<{ value: string | number; label: string } | null>(null);
 
     const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
@@ -98,9 +98,9 @@ const Users = () => {
             try {
                 const params = new URLSearchParams();
                 if (debouncedSearchQuery) params.append('query', debouncedSearchQuery);
-                if (selectedRole) params.append('role', selectedRole);
-                if (selectedStatus) params.append('status', selectedStatus);
-
+                if (selectedRole) params.append('role', selectedRole.value.toString());
+                if (selectedStatus) params.append('status', selectedStatus.value.toString());
+                    console.log("params" , params)
                 const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/users?${params.toString()}`);
                 setUsers(response.data);
             } catch (err) {
@@ -119,8 +119,8 @@ const Users = () => {
         try {
             const params = new URLSearchParams();
             if (debouncedSearchQuery) params.append('query', debouncedSearchQuery);
-            if (selectedRole) params.append('role', selectedRole);
-            if (selectedStatus) params.append('status', selectedStatus);
+            if (selectedRole) params.append('role', selectedRole.value.toString());
+            if (selectedStatus) params.append('status', selectedStatus.value.toString());
             const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/users?${params.toString()}`);
             setUsers(response.data);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

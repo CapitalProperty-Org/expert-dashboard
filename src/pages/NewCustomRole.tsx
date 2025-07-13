@@ -32,7 +32,7 @@ const NewCustomRole = () => {
 
     const [roleName, setRoleName] = useState('');
     const [baseRoles, setBaseRoles] = useState<BaseRole[]>([]);
-    const [selectedBaseRoleId, setSelectedBaseRoleId] = useState<string | null>(null);
+    const [selectedBaseRoleId, setSelectedBaseRoleId] = useState<{ value: string | number; label: string } | null>(null);
     const [permissionRules, setPermissionRules] = useState<PermissionRule[]>([]);
     const [selectedPermissions, setSelectedPermissions] = useState<Set<number>>(new Set());
     
@@ -48,7 +48,8 @@ const NewCustomRole = () => {
             try {
                 const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/roles`);
                 setBaseRoles(response.data);
-            } catch (err) {
+            } catch (err: unknown) {
+                console.error("Failed to load base roles:", err);
                 setError("Failed to load base roles.");
             } finally {
                 setLoadingBaseRoles(false);
@@ -68,7 +69,7 @@ const NewCustomRole = () => {
             setLoadingPermissions(true);
             setError(null);
             try {
-                const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/permissions-matrix/roles/${selectedBaseRoleId}/custom-role-creation-rules`);
+                const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/permissions-matrix/roles/${selectedBaseRoleId.value}/custom-role-creation-rules`);
                 const rules: PermissionRule[] = response.data;
                 setPermissionRules(rules);
 
@@ -84,7 +85,8 @@ const NewCustomRole = () => {
                 });
                 setSelectedPermissions(initialSelected);
 
-            } catch (err) {
+            } catch (err: unknown) {
+                console.error("Failed to load permissions for the selected role:", err);
                 setError("Failed to load permissions for the selected role.");
             } finally {
                 setLoadingPermissions(false);
@@ -145,15 +147,16 @@ const NewCustomRole = () => {
         try {
             // 2. إرسال طلب PUT إلى الـ endpoint الصحيح
             await axios.put(
-                `${import.meta.env.VITE_BASE_URL}/api/permissions-matrix/roles/${selectedBaseRoleId}/editable-permissions`, 
+                `${import.meta.env.VITE_BASE_URL}/api/permissions-matrix/roles/${selectedBaseRoleId.value}/editable-permissions`, 
                 editablePermissionsToSave // Body الطلب هو مصفوفة من الأرقام
             );
             
             alert('Permissions updated successfully!');
             navigate('/roles-permissions');
 
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to update permissions.");
+        } catch (err: unknown) {
+            const errorMessage = err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data ? String(err.response.data.message) : "Failed to update permissions.";
+            setError(errorMessage);
         } finally {
             setIsSubmitting(false);
         }
@@ -175,7 +178,7 @@ const NewCustomRole = () => {
                                 <input type="text" placeholder="e.g. Senior Agent" value={roleName} onChange={e => setRoleName(e.target.value)} className="w-full p-2.5 border rounded-lg text-sm" />
                             </FormField>
                             <FormField label="Base role">
-                                <CustomSelect options={baseRoleOptions} placeholder="Choose base role" value={selectedBaseRoleId || ''} onChange={setSelectedBaseRoleId} disabled={loadingBaseRoles} />
+                                <CustomSelect options={baseRoleOptions} placeholder="Choose base role" value={selectedBaseRoleId} onChange={setSelectedBaseRoleId} disabled={loadingBaseRoles} />
                             </FormField>
                         </div>
                         <div className="bg-gray-100 p-4 rounded-lg">

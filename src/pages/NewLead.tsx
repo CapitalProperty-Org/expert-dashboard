@@ -77,7 +77,7 @@ const NewLead = () => {
         setIsSubmitting(true);
         setError(null);
 
-        console.log(leadData)
+        console.log("leadData" , leadData)
         console.log('preferredLocations:', leadData.preferredLocations)
         
         const payload: any = {

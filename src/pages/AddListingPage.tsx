@@ -23,13 +23,16 @@ const initialState: ListingState = {
   available: 'immediately', availableDate: null, size: '', bedrooms: '', 
   bathrooms: '', developer: '', unitNumber: '', parkingSlots: '', 
   furnishingType: null, age: '', numberOfFloors: '', projectStatus: '', ownerName: '',
-  price: '', downPayment: '', numberOfCheques: '', amenities: [], title: '', description: ''
+  price: '', downPayment: '', numberOfCheques: '', amenities: [], title: '', description: '',
+  images: []
 };
 
 function listingReducer(state: ListingState, action: ListingAction): ListingState {
   switch (action.type) {
     case 'UPDATE_FIELD':
       return { ...state, [action.field]: action.value };
+    case 'SET_IMAGES':
+      return { ...state, images: action.value };
     case 'RESET_PERMIT':
       return {...state, permitType: null, reraPermitNumber: '', dtcmPermitNumber: ''};
     case 'RESET_REQUIREMENTS':
@@ -84,6 +87,7 @@ const AddListingPage = () => {
             bathrooms: debouncedFormData.bathrooms,
             size: Number(debouncedFormData.size),
             amenities: debouncedFormData.amenities,
+            media: { images: debouncedFormData.images.map(() => ({})) }
         };
         try {
             const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/quality-score`, payload);
@@ -97,7 +101,6 @@ const AddListingPage = () => {
   }, [debouncedFormData]);
 
   const handlePublish = async () => {
-    // التحقق من أن كل الحقول المطلوبة مملوءة
     if (!completedSteps.includes('core')) {
         setError("Please complete the 'Core details' section first.");
         return;
@@ -107,7 +110,7 @@ const AddListingPage = () => {
     setError(null);
     setShowSuccess(false);
 
-    const payload = {
+    const listingData = {
       assigned_to: { id: (formData.assignedAgent as SelectOption).value },
       available_from: formData.available === 'immediately' ? new Date().toISOString() : formData.availableDate?.toISOString(),
       price: {
@@ -117,7 +120,6 @@ const AddListingPage = () => {
           number_of_cheques: formData.offeringType === 'rent' && formData.numberOfCheques ? Number(formData.numberOfCheques) : undefined
       },
       uae_emirate: formData.uae_emirate,
-      media: { videos: {} },
       title: { en: formData.title },
       description: { en: formData.description },
       location: { id: (formData.propertyLocation as SelectOption).value },
@@ -138,12 +140,21 @@ const AddListingPage = () => {
       owner_name: formData.ownerName,
     };
 
+    const apiPayload = new FormData();
+    apiPayload.append('data', JSON.stringify(listingData));
+    formData.images.forEach(file => {
+      apiPayload.append('images', file);
+    });
+
     try {
-        await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings`, payload);
+        await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings`, apiPayload, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
         setShowSuccess(true);
         setTimeout(() => navigate('/listings-management'), 3000);
     } catch (err: any) {
-        setError(err.response?.data?.message || "Error: Could not publish listing.");
+        const errorMsg = err.response?.data?.error || err.response?.data?.message || "Error: Could not publish listing.";
+        setError(errorMsg);
     } finally {
         setIsSubmitting(false);
     }
@@ -154,11 +165,15 @@ const AddListingPage = () => {
           setCompletedSteps(prev => [...prev, stepId]);
       }
   };
+  
+  const handleSetImages = (files: File[]) => {
+      dispatch({ type: 'SET_IMAGES', value: files });
+  };
 
   const sections = [
     { id: 'core', title: 'Core details', component: <CoreDetailsForm state={formData} dispatch={dispatch} onComplete={() => handleStepComplete('core')} agents={agents} isLoadingAgents={loadingLookups} /> },
     { id: 'specs', title: 'Specifications', component: <SpecificationsForm state={formData} dispatch={dispatch} onComplete={() => handleStepComplete('specs')} /> },
-    { id: 'media', title: 'Media', component: <MediaForm /> },
+    { id: 'media', title: 'Media', component: <MediaForm images={formData.images} onSetImages={handleSetImages} /> },
     { id: 'price', title: 'Price', component: <PriceForm state={formData} dispatch={dispatch} onComplete={() => handleStepComplete('price')} /> },
     { id: 'amenities', title: 'Amenities', component: <AmenitiesForm state={formData} dispatch={dispatch} onComplete={() => handleStepComplete('amenities')} /> },
     { id: 'description', title: 'Description', component: <DescriptionForm state={formData} dispatch={dispatch} onComplete={() => handleStepComplete('description')} /> },
@@ -194,7 +209,7 @@ const AddListingPage = () => {
           </div>
           <div className="hidden lg:block">
               <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto scrollbar-thin">
-                   <ListingPreview state={formData} />
+                   <ListingPreview state={formData} images={formData.images} />
               </div>
           </div>
         </div>
@@ -204,5 +219,3 @@ const AddListingPage = () => {
 };
 
 export default AddListingPage;
-
-

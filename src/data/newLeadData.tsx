@@ -1,9 +1,9 @@
-export const purposeOfBuyingOptions = ["Own living", "Resell", "For renting", "Investment"];
-export const propertyTypeOptionsResidential = ["Apartment", "Villa", "Townhouse", "Penthouse", "Compound", "Duplex"];
-export const propertyTypeOptionsCommercial = ["Office Space", "Retail", "Shop", "Show Room", "Short Term & Hotel Apartment", "Bulk Units", "Others"];
-export const bedroomsOptions = ["Studio", "1", "2", "3", "4", "5", "6+"];
+export const purposeOfBuyingOptions = ["own living", "resell", "for renting", "investment"];
+export const propertyTypeOptionsResidential = ["apartment", "villa", "townhouse", "penthouse", "compound", "duplex"];
+export const propertyTypeOptionsCommercial = ["office space", "retail", "shop", "show room", "short term & hotel apartment", "bulk units", "others"];
+export const bedroomsOptions = ["studio", "1", "2", "3", "4", "5", "6+"];
 export const bathroomsOptions = ["1", "2", "3", "4+"];
-export const furnishingOptions = ["Furnished", "Unfurnished", "Semi furnished"];
-export const readinessOptions = ["Mortgage approved", "Mortgage in progress", "Ready to pay"];
-export const purchasePeriodOptions = ["Immediate", "In 3 months", "In 6 months", "more than 6 months"];
-export const moveInPeriodOptions = ["Immediate", "In 3 months", "In 6 months", "more than 6 months"];
+export const furnishingOptions = ["furnished", "unfurnished", "semi furnished"];
+export const readinessOptions = ["mortgage approved", "mortgage in progress", "ready to pay"];
+export const purchasePeriodOptions = ["immediate", "in 3 months", "in 6 months", "more than 6 months"];
+export const moveInPeriodOptions = ["immediate", "in 3 months", "in 6 months", "more than 6 months"];
