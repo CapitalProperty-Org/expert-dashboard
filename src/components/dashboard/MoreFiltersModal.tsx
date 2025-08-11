@@ -114,6 +114,8 @@ const MoreFiltersModal = ({
     { value: "semi-furnished", label: "Semi furnished" },
   ];
   const typeOptions = getTypeOptions(tempFilters.category || "");
+  // Temporarily hidden options
+  /*
   const exposureOptions = [
     { value: "featured", label: "Featured" },
     { value: "standard", label: "Standard" },
@@ -141,6 +143,7 @@ const MoreFiltersModal = ({
     { value: "approved", label: "Approved" },
     { value: "failed", label: "Failed" },
   ];
+  */
   const completionStatusOptions = [
     { value: "resale - Ready to move", label: "Resale - Ready to move" },
     { value: "Primary - Ready to move", label: "Primary - Ready to move" },
@@ -219,6 +222,7 @@ const MoreFiltersModal = ({
               </div>
             </div>
 
+            {/* Temporarily hidden fields
             <div>
               <Label>Exposure Type</Label>
               <CustomSelect
@@ -258,6 +262,7 @@ const MoreFiltersModal = ({
                 onChange={v => handleFilterChange("state", v?.value ?? "")}
               />
             </div>
+            */}
 
             <div>
               <Label>Completion Status</Label>
