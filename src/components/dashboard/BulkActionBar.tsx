@@ -10,9 +10,10 @@ interface BulkActionBarProps {
     onArchive: () => void;
     onReject: () => void;
     onReassignClick: () => void;
+    onApprove: () => void;
 }
 
-const BulkActionBar = ({ selectedCount, isDraftMode, onDeselectAll, onPublish, onUnpublish, onArchive, onReject, onReassignClick }: BulkActionBarProps) => {
+const BulkActionBar = ({ selectedCount, isDraftMode, onDeselectAll, onPublish, onUnpublish, onArchive, onReject, onReassignClick, onApprove }: BulkActionBarProps) => {
     const [isMoreMenuOpen, setMoreMenuOpen] = useState(false);
 
     return (
@@ -27,7 +28,7 @@ const BulkActionBar = ({ selectedCount, isDraftMode, onDeselectAll, onPublish, o
                 <button onClick={onUnpublish} className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-700 rounded-md text-sm whitespace-nowrap"><EyeOff size={16}/> Unpublish</button>
             )}
 
-            <button className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-700 rounded-md text-sm whitespace-nowrap"><ThumbsUp size={16}/> Approve</button>
+            <button onClick={onApprove} className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-700 rounded-md text-sm whitespace-nowrap"><ThumbsUp size={16}/> Approve</button>
             
             <div className="relative">
                 <button onClick={() => setMoreMenuOpen(!isMoreMenuOpen)} className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-700 rounded-md text-sm whitespace-nowrap"><ChevronUp size={16}/> More</button>

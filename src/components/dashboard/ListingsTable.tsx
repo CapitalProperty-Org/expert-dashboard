@@ -75,7 +75,11 @@ const ListingsTable = ({ listings, isSelectionMode, selectedIds, onSelectionChan
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(listing.updated_at).toLocaleDateString()}</td>
                                 
                                 <td className="px-6 py-4 whitespace-nowrap text-center relative">
-                                    <ActionMenu listingId={listing.id} onActionComplete={onActionComplete} />
+                                    <ActionMenu 
+                                        listingId={listing.id} 
+                                        onActionComplete={onActionComplete} 
+                                        listingData={listing}
+                                    />
                                 </td>
                             </tr>
                         ))}

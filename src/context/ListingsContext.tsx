@@ -15,6 +15,7 @@ export interface Listing {
     updated_at: string;
     assigned_to: { name: string };
     location: { id: number; name?: string };
+    images?: string[]; // Add support for property images
 }
 
 export interface Pagination {
@@ -37,6 +38,12 @@ interface ListingsContextType {
     fetchListings: (options: FetchOptions) => void;
     showErrorToast: boolean;
     setShowErrorToast: (show: boolean) => void;
+    approveListing: (id: string) => Promise<void>;
+    rejectListing: (id: string) => Promise<void>;
+    reassignListing: (id: string, payload: { new_assigned_to: string }) => Promise<void>;
+    publishListing: (id: string) => Promise<void>;
+    archiveListing: (id: string) => Promise<void>;
+    unarchiveListing: (id: string) => Promise<void>;
 }
 
 const ListingsContext = createContext<ListingsContextType | null>(null);
@@ -95,6 +102,67 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
         }
     }, []);
 
+    const approveListing = useCallback(async (id: string) => {
+        try {
+            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/approve`, {
+                listing_ids: [id]
+            });
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to approve listing.";
+            throw new Error(errorMessage);
+        }
+    }, []);
+
+    const rejectListing = useCallback(async (id: string) => {
+        try {
+            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/reject`, {
+                listing_ids: [id]
+            });
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to reject listing.";
+            throw new Error(errorMessage);
+        }
+    }, []);
+
+    const reassignListing = useCallback(async (id: string, payload: { new_assigned_to: string }) => {
+        try {
+            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/reassign`, {
+                listing_ids: [id],
+                to_agent_id: payload.new_assigned_to
+            });
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to reassign listing.";
+            throw new Error(errorMessage);
+        }
+    }, []);
+
+    const publishListing = useCallback(async (id: string) => {
+        try {
+            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/publish`);
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to publish listing.";
+            throw new Error(errorMessage);
+        }
+    }, []);
+
+    const archiveListing = useCallback(async (id: string) => {
+        try {
+            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/archive`);
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to archive listing.";
+            throw new Error(errorMessage);
+        }
+    }, []);
+
+    const unarchiveListing = useCallback(async (id: string) => {
+        try {
+            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/unarchive`);
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to unarchive listing.";
+            throw new Error(errorMessage);
+        }
+    }, []);
+
     return (
         <ListingsContext.Provider value={{ 
             listings, 
@@ -103,7 +171,13 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
             error, 
             fetchListings,
             showErrorToast,
-            setShowErrorToast
+            setShowErrorToast,
+            approveListing,
+            rejectListing,
+            reassignListing,
+            publishListing,
+            archiveListing,
+            unarchiveListing
         }}>
             {children}
             {showErrorToast && error && (

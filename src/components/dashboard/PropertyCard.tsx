@@ -30,7 +30,11 @@ const PropertyCard = ({ listing, onActionComplete }: PropertyCardProps) => {
             <div className="relative h-40 bg-gray-200 flex items-center justify-center">
                 <PlaceholderImage />
                 <div className="absolute top-2 right-2">
-                   <ActionMenu listingId={listing.id} onActionComplete={onActionComplete} />
+                   <ActionMenu 
+                       listingId={listing.id} 
+                       onActionComplete={onActionComplete} 
+                       listingData={listing}
+                   />
                 </div>
             </div>
             <div className="p-4 flex flex-col flex-grow">

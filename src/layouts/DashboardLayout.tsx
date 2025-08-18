@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/sidebar/Sidebar';
 import MobileSidebar from '../components/sidebar/MobileSidebar';
-import FloatingActionButton from '../components/ui/FloatingActionButton';
+// import FloatingActionButton from '../components/ui/FloatingActionButton';
 import { Menu } from 'lucide-react';
 
 const DashboardLayout = () => {
@@ -32,7 +32,7 @@ const DashboardLayout = () => {
         </main>
       </div>
 
-      <FloatingActionButton />
+      {/* <FloatingActionButton /> */}
     </div>
   );
 };

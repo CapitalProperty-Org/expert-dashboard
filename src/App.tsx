@@ -32,6 +32,7 @@ import LoginPage from "./pages/LoginPage";
 import UserDetails from "./pages/UserDetails";
 import CompanyProfile from "./pages/CompanyProfile";
 import { ListingsProvider } from "./context/ListingsContext";
+import { CreditsProvider } from "./context/CreditsContext";
 import LeadDetails from "./pages/LeadDetails";
 
 const AppRoutes = () => {
@@ -74,7 +75,7 @@ const AppRoutes = () => {
           <Route path="payments" element={<Payments />} />
           <Route path="transactions" element={<Transactions />} />
           <Route path="claim-transaction" element={<ClaimTransaction />} />
-          <Route path="credit-usage-history" element={<CreditUsageHistory />} />
+          <Route path="credit-usage-history" element={<CreditsProvider><CreditUsageHistory /></CreditsProvider>} />
           <Route path="credit-returns" element={<CreditReturns />} />
           <Route path="request-statement" element={<RequestStatement />} />
           <Route path="users" element={<Users />} />
