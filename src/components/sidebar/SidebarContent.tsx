@@ -4,7 +4,8 @@ import {
   Inbox,
   Gift,
   Shield,
-  Users2Icon
+  Users2Icon,
+  ExternalLink
 } from 'lucide-react';
 import UserProfile from './UserProfile';
 import NavItem from './NavItem';
@@ -82,7 +83,11 @@ const SidebarContent = () => {
           </select>
         </div>
         <CreditsStatus />
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200 space-y-2">
+          <a href="http://localhost:3000" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-3 text-sm text-gray-600 hover:text-gray-900">
+            <ExternalLink size={20} />
+            <span>Back to Website</span>
+          </a>
           <a href="#" className="flex items-center space-x-3 text-sm text-gray-600 hover:text-gray-900">
             <LifeBuoy size={20} />
             <span>Help Center</span>
