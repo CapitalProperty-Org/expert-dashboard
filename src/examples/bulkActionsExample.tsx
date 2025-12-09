@@ -41,7 +41,7 @@ const BulkActionsExample = () => {
             // Process each selected listing
             for (const id of selectedIds) {
                 try {
-                    await fetch(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/approve`, {
+                    await fetch(`${import.meta.env.VITE_BASE_URL}/api/listings/${id}/approve`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ const BulkActionsExample = () => {
             // Process each selected listing
             for (const id of selectedIds) {
                 try {
-                    await fetch(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/reject`, {
+                    await fetch(`${import.meta.env.VITE_BASE_URL}/api/listings/${id}/reject`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ const BulkActionsExample = () => {
             // Process each selected listing
             for (const id of selectedIds) {
                 try {
-                    await fetch(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/reassign`, {
+                    await fetch(`${import.meta.env.VITE_BASE_URL}/api/listings/${id}/reassign`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -175,7 +175,7 @@ const BulkActionsExample = () => {
     const handlePublish = async () => {
         try {
             for (const id of selectedIds) {
-                await fetch(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/publish`, {
+                await fetch(`${import.meta.env.VITE_BASE_URL}/api/listings/${id}/publish`, {
                     method: 'POST'
                 });
             }
@@ -190,7 +190,7 @@ const BulkActionsExample = () => {
     const handleArchive = async () => {
         try {
             for (const id of selectedIds) {
-                await fetch(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/archive`, {
+                await fetch(`${import.meta.env.VITE_BASE_URL}/api/listings/${id}/archive`, {
                     method: 'POST'
                 });
             }

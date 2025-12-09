@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MoreHorizontal, Edit2, Eye, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import { useConfirmationModal } from '../../hooks/useConfirmationModal';
+import { useListings } from '../../context/ListingsContext'; // Add this import
 import ErrorToast from './ErrorToast';
 import SuccessToast from './SuccessToast';
 
@@ -12,6 +13,7 @@ interface ArchiveTableActionMenuProps {
 
 const ArchiveTableActionMenu = ({ listingId, onActionComplete }: ArchiveTableActionMenuProps) => {
     const { openModal, ConfirmationModalComponent } = useConfirmationModal();
+    const { deleteListing } = useListings(); // Add this line
     const [isOpen, setIsOpen] = useState(false);
     const [showErrorToast, setShowErrorToast] = useState(false);
     const [showSuccessToast, setShowSuccessToast] = useState(false);
@@ -31,12 +33,26 @@ const ArchiveTableActionMenu = ({ listingId, onActionComplete }: ArchiveTableAct
     const handleUnarchive = async () => {
         try {
             await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${listingId}/unarchive`);
+            setErrorMessage(''); // Clear error message
             setShowSuccessToast(true);
             onActionComplete();
         } catch (error) {
             setErrorMessage('Failed to unarchive listing.');
             setShowErrorToast(true);
             console.error('Error unarchiving:', error);
+        }
+    };
+
+    const handleDelete = async () => {
+        try {
+            await deleteListing(listingId);
+            setErrorMessage(''); // Clear error message
+            setShowSuccessToast(true);
+            onActionComplete();
+        } catch (error) {
+            setErrorMessage('Failed to delete listing.');
+            setShowErrorToast(true);
+            console.error('Error deleting:', error);
         }
     };
 
@@ -47,6 +63,17 @@ const ArchiveTableActionMenu = ({ listingId, onActionComplete }: ArchiveTableAct
             description: 'Listing will appear under the Listings Management tab.',
             confirmText: 'Submit',
             onConfirm: handleUnarchive,
+        });
+    };
+    
+    const confirmDelete = () => {
+        setIsOpen(false);
+        openModal({
+            title: 'Are you sure you want to delete this listing?',
+            description: 'This action cannot be undone.',
+            confirmText: 'Delete',
+            isDestructive: true,
+            onConfirm: handleDelete,
         });
     };
     
@@ -72,7 +99,7 @@ const ArchiveTableActionMenu = ({ listingId, onActionComplete }: ArchiveTableAct
                                 </button>
                             </li>
                             <li>
-                                <button className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                <button onClick={confirmDelete} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                                     <Trash2 size={16} /> Delete
                                 </button>
                             </li>
@@ -93,7 +120,7 @@ const ArchiveTableActionMenu = ({ listingId, onActionComplete }: ArchiveTableAct
             {showSuccessToast && (
                 <SuccessToast 
                     show={showSuccessToast}
-                    message="Listing unarchived successfully!" 
+                    message={errorMessage || "Operation completed successfully!"}
                     onClose={() => setShowSuccessToast(false)} 
                 />
             )}
