@@ -21,7 +21,6 @@ const CoreDetailsForm = ({
   dispatch,
   onComplete,
   agents,
-  isLoadingAgents,
 }: FormProps) => {
   const updateField = (
     field: keyof ListingState,
@@ -389,7 +388,7 @@ const CoreDetailsForm = ({
         )}
 
       {/* باقي الحقول - تظهر فقط إذا تم اختيار Property type */}
-      {(state.propertyType || state.propertyType === "") && (
+      {state.propertyType && (
         <>
           <FormLabel text="Property location" required>
             <LocationAutocomplete
@@ -402,8 +401,7 @@ const CoreDetailsForm = ({
               options={agents}
               value={state.assignedAgent}
               onChange={(val) => updateField("assignedAgent", val)}
-              placeholder={isLoadingAgents ? "Loading agents..." : "Select an agent"}
-              disabled={isLoadingAgents}
+              placeholder="Select an agent"
             />
           </FormLabel>
           <FormLabel text="Reference" required>

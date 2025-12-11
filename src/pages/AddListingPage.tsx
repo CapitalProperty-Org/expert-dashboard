@@ -103,15 +103,7 @@ const AddListingPage = () => {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setAgents(agentsRes.data.map((u: { id: number; first_name: string; last_name: string }) => ({ value: u.id, label: `${u.first_name} ${u.last_name}` })));
-        } catch (error) { 
-            console.error("Failed to fetch agents", error);
-            // Fallback to static agents if API fails
-            setAgents([
-                { value: 1, label: "Agent 1" },
-                { value: 2, label: "Agent 2" },
-                { value: 3, label: "Agent 3" }
-            ]);
-        } 
+        } catch (error) { console.error("Failed to fetch lookups", error); } 
         finally { setLoadingLookups(false); }
     };
     fetchLookups();
@@ -165,19 +157,6 @@ const AddListingPage = () => {
 
     console.log('Developer value:', formData.developer, 'Type:', typeof formData.developer);
     
-    // Validate required fields
-    if (!formData.assignedAgent) {
-        setError("Please select an assigned agent.");
-        setIsSubmitting(false);
-        return;
-    }
-    
-    if (!formData.propertyLocation) {
-        setError("Please select a property location.");
-        setIsSubmitting(false);
-        return;
-    }
-    
     const listingData = {
       assigned_to: { id: (formData.assignedAgent as SelectOption).value },
       available_from: formData.available === 'immediately' ? new Date().toISOString() : formData.availableDate?.toISOString(),
@@ -217,35 +196,18 @@ const AddListingPage = () => {
     });
 
     try {
-        const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings`, apiPayload, {
+        await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings`, apiPayload, {
             headers: { 
                 'Content-Type': 'multipart/form-data',
                 'Authorization': `Bearer ${token}`
             }
         });
-        console.log('Listing created successfully:', response.data);
         setShowSuccess(true);
         setTimeout(() => navigate('/listings-management'), 3000);
-    } catch (err: unknown) {
-        console.error('Error creating listing:', err);
-        let errorMsg = "Error: Could not publish listing.";
-        
-        if (axios.isAxiosError(err)) {
-            if (err.response?.status === 401) {
-                errorMsg = "Authentication failed. Please log in again.";
-            } else if (err.response?.status === 400) {
-                errorMsg = `Validation error: ${err.response.data?.message || 'Please check your input data.'}`;
-            } else if (err.response?.status === 500) {
-                errorMsg = "Server error. Please try again later.";
-            } else if (err.response?.data) {
-                errorMsg = err.response.data?.message || errorMsg;
-            }
-        } else if (err instanceof Error) {
-            errorMsg = err.message;
-        }
-        
-        setError(errorMsg);
-    } finally {
+         } catch (err: unknown) {
+         const errorMsg = err instanceof Error ? err.message : "Error: Could not publish listing.";
+         setError(errorMsg);
+     } finally {
         setIsSubmitting(false);
     }
   };

@@ -45,7 +45,7 @@ interface ActionMenuProps {
 
 const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProps) => {
     const { openModal, ConfirmationModalComponent } = useConfirmationModal();
-    const { archiveListing, deleteListing } = useListings();
+    const { archiveListing } = useListings();
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -320,7 +320,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
         try {
             switch (action) {
                 case 'delete':
-                    await deleteListing(listingId);
+                    await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${listingId}`);
                     break;
                 case 'archive':
                     await archiveListing(listingId);

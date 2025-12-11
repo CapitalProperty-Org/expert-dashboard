@@ -26,7 +26,7 @@ const EmailStep = ({ onNext }: EmailStepProps) => {
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" id="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg" required />
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg" required />
                 </div>
                 <div className="flex items-center gap-3">
                     <button type="button" onClick={() => setAcceptedTerms(!acceptedTerms)} className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${acceptedTerms ? 'bg-violet-600 border-violet-600' : 'border-gray-300'}`}>

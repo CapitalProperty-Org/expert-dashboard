@@ -24,40 +24,14 @@ const LocationAutocomplete = ({ value, onChange }: LocationAutocompleteProps) =>
                 const response = await axios.get(
                     `${import.meta.env.VITE_BASE_URL}/api/location-tree/search/autocomplete?keyword=${inputValue}&limit_by_city=50`
                 );
-                
-                // Check if response has data
-                if (response.data && response.data.data) {
-                    const options = response.data.data.map((loc: { id: number; title: string }) => ({
-                        value: loc.id,
-                        label: loc.title,
-                    }));
-                    callback(options);
-                } else {
-                    // Fallback to static locations if API returns no data
-                    const staticLocations = [
-                        { value: 1, label: "Dubai" },
-                        { value: 2, label: "Abu Dhabi" },
-                        { value: 3, label: "Sharjah" },
-                        { value: 4, label: "Ajman" },
-                        { value: 5, label: "Fujairah" },
-                        { value: 6, label: "Ras Al Khaimah" },
-                        { value: 7, label: "Umm Al Quwain" }
-                    ].filter(loc => loc.label.toLowerCase().includes(inputValue.toLowerCase()));
-                    callback(staticLocations);
-                }
+                const options = response.data.data.map((loc: { id: number; title: string }) => ({
+                    value: loc.id,
+                    label: loc.title,
+                }));
+                callback(options);
             } catch (error) {
                 console.error("Failed to fetch locations", error);
-                // Fallback to static locations if API fails
-                const staticLocations = [
-                    { value: 1, label: "Dubai" },
-                    { value: 2, label: "Abu Dhabi" },
-                    { value: 3, label: "Sharjah" },
-                    { value: 4, label: "Ajman" },
-                    { value: 5, label: "Fujairah" },
-                    { value: 6, label: "Ras Al Khaimah" },
-                    { value: 7, label: "Umm Al Quwain" }
-                ].filter(loc => loc.label.toLowerCase().includes(inputValue.toLowerCase()));
-                callback(staticLocations);
+                callback([]);
             }
         }, 500); // تأخير 500ms
     };

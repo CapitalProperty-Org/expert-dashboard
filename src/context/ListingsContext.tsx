@@ -44,7 +44,6 @@ interface ListingsContextType {
     publishListing: (id: string) => Promise<void>;
     archiveListing: (id: string) => Promise<void>;
     unarchiveListing: (id: string) => Promise<void>;
-    deleteListing: (id: string) => Promise<void>; // Add this line
 }
 
 const ListingsContext = createContext<ListingsContextType | null>(null);
@@ -164,15 +163,6 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
         }
     }, []);
 
-    const deleteListing = useCallback(async (id: string) => {
-        try {
-            await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}`);
-        } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : "Failed to delete listing.";
-            throw new Error(errorMessage);
-        }
-    }, []);
-
     return (
         <ListingsContext.Provider value={{ 
             listings, 
@@ -187,8 +177,7 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
             reassignListing,
             publishListing,
             archiveListing,
-            unarchiveListing,
-            deleteListing // Add this line
+            unarchiveListing
         }}>
             {children}
             {showErrorToast && error && (
