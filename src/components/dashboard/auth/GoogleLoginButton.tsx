@@ -15,13 +15,14 @@ const GoogleLoginButton = () => {
                     localStorage.setItem('token', data.token);
                     window.location.href = '/dashboard';
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Google Login Failed', error);
-                alert('Google Login Failed');
+                const errorMessage = error.response?.data?.message || error.message || 'Google Login Failed';
+                alert(`Login Failed: ${errorMessage}`);
             }
         },
-        onError: () => {
-            console.log('Login Failed');
+        onError: (errorResponse) => {
+            console.error('Google Login Failed', errorResponse);
         },
     });
 

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { X, Send, Sparkles, RefreshCw, Check } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
-import { ListingState } from '../../../types';
+import type { ListingState } from '../../../types';
 
 interface AiChatAssistantProps {
     isOpen: boolean;

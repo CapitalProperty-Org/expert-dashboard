@@ -3,7 +3,7 @@ import type { ListingAction, ListingState, SelectOption } from "../../../types";
 import CustomSelect from "../../ui/CustomSelect";
 import SegmentedControl from "../../ui/SegmentedControl";
 import FormLabel from "../../ui/FormLabel";
-import GoogleLocationPicker from "../../ui/GoogleLocationPicker";
+import LocationAutocomplete from "../../ui/LocationAutocomplete";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { Home, Building, BadgeDollarSign, BadgePercent } from "lucide-react";
@@ -24,19 +24,16 @@ const CoreDetailsForm = ({
 }: FormProps) => {
   const updateField = (
     field: keyof ListingState,
-    value: string | SelectOption | null | Date
+    value: string | SelectOption | null | Date | number | unknown
   ) => {
     if (field === "uae_emirate") {
-      // Check if emirate actually changed
       const newEmirate = typeof value === 'string' ? value : '';
       if (newEmirate !== state.uae_emirate) {
-        // Reset all form data when emirate changes
         dispatch({ type: "RESET_PERMIT" });
       }
     }
 
     if (field === "permitType") {
-      // Reset form data when permit type changes
       dispatch({ type: "RESET_PERMIT" });
     }
 
@@ -68,7 +65,7 @@ const CoreDetailsForm = ({
       category &&
       offeringType &&
       propertyType &&
-      (propertyLocation || state.googleAddress) &&
+      propertyLocation &&
       assignedAgent &&
       reference;
     const dubaiPermitConditionsMet =
@@ -132,19 +129,8 @@ const CoreDetailsForm = ({
     return [];
   };
 
-  // ترتيب الحقول حسب المطلوب في الصور
   return (
     <div className="space-y-6">
-      {/* Debug info - remove in production */}
-      {import.meta.env.DEV && (
-        <div className="bg-gray-100 p-3 rounded text-xs">
-          <strong>Debug:</strong> Emirate: {state.uae_emirate || 'none'} |
-          Category: {state.category || 'none'} |
-          Offering: {state.offeringType || 'none'} |
-          Property Type: {state.propertyType || 'none'}
-        </div>
-      )}
-      {/* Emirate */}
       <FormLabel text="Emirate" required>
         <CustomSelect
           placeholder="Select an option"
@@ -172,7 +158,6 @@ const CoreDetailsForm = ({
         />
       </FormLabel>
 
-      {/* Permit type (Dubai) - يظهر فقط إذا تم اختيار Dubai */}
       {state.uae_emirate && state.uae_emirate === "dubai" && (
         <>
           <FormLabel text="Permit type" required>
@@ -186,7 +171,6 @@ const CoreDetailsForm = ({
               onChange={(val) => updateField("permitType", val)}
             />
           </FormLabel>
-          {/* RERA permit number */}
           {state.permitType === "rera" && (
             <FormLabel text="RERA permit number" required>
               <div className="flex items-center gap-2">
@@ -202,12 +186,8 @@ const CoreDetailsForm = ({
                   Validate
                 </button>
               </div>
-              {!state.reraPermitNumber && (
-                <p className="text-xs text-red-500 mt-1">Required</p>
-              )}
             </FormLabel>
           )}
-          {/* DTCM permit number */}
           {state.permitType === "dtcm" && (
             <FormLabel text="DTCM permit number" required>
               <input
@@ -218,24 +198,14 @@ const CoreDetailsForm = ({
                   updateField("dtcmPermitNumber", e.target.value)
                 }
               />
-              {!state.dtcmPermitNumber && (
-                <p className="text-xs text-red-500 mt-1">Required</p>
-              )}
             </FormLabel>
           )}
         </>
       )}
 
-      {/* Permit type (Abu Dhabi) - يظهر فقط إذا تم اختيار Abu Dhabi */}
       {state.uae_emirate && state.uae_emirate === "abu_dhabi" && (
         <>
           <FormLabel text="Permit type" required>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-medium text-gray-700">Permit type *</span>
-              <div className="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-xs text-gray-600">i</span>
-              </div>
-            </div>
             <SegmentedControl
               options={[
                 { label: "ADREC", value: "adrec" },
@@ -245,51 +215,39 @@ const CoreDetailsForm = ({
               onChange={(val) => updateField("permitType", val)}
             />
           </FormLabel>
-
-          {/* Broker license - يظهر فقط إذا تم اختيار ADREC */}
           {state.permitType === "adrec" && (
-            <FormLabel text="Broker license" required>
-              <CustomSelect
-                placeholder="Select an option*"
-                options={[
-                  { value: "adrec_license_1", label: "ADREC License 1" },
-                  { value: "adrec_license_2", label: "ADREC License 2" },
-                  { value: "adrec_license_3", label: "ADREC License 3" },
-                ]}
-                value={state.reraPermitNumber ? { value: state.reraPermitNumber, label: state.reraPermitNumber } : null}
-                onChange={(val) => updateField("reraPermitNumber", val ? val.value as string : "")}
-              />
-            </FormLabel>
-          )}
-
-          {/* Permit number - يظهر فقط إذا تم اختيار ADREC */}
-          {state.permitType === "adrec" && (
-            <FormLabel text="Permit number" required>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  className="w-full p-2.5 border rounded-lg bg-white text-gray-900"
-                  value={state.dtcmPermitNumber}
-                  onChange={(e) => updateField("dtcmPermitNumber", e.target.value)}
-                  placeholder="Enter permit number"
+            <>
+              <FormLabel text="Broker license" required>
+                <CustomSelect
+                  placeholder="Select an option*"
+                  options={[
+                    { value: "adrec_license_1", label: "ADREC License 1" },
+                    { value: "adrec_license_2", label: "ADREC License 2" },
+                    { value: "adrec_license_3", label: "ADREC License 3" },
+                  ]}
+                  value={state.reraPermitNumber ? { value: state.reraPermitNumber, label: state.reraPermitNumber } : null}
+                  onChange={(val) => updateField("reraPermitNumber", val ? val.value as string : "")}
                 />
-                <button className="bg-white border border-violet-600 text-violet-700 font-semibold py-2.5 px-4 rounded-lg hover:bg-violet-50 transition">
-                  Validate
-                </button>
-              </div>
-            </FormLabel>
-          )}
-
-          {/* Informational text for ADREC */}
-          {state.permitType === "adrec" && (
-            <p className="text-xs text-gray-500 mt-1">
-              ADREC requires the broker license number along with the permit number for validation.
-            </p>
+              </FormLabel>
+              <FormLabel text="Permit number" required>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    className="w-full p-2.5 border rounded-lg bg-white text-gray-900"
+                    value={state.dtcmPermitNumber}
+                    onChange={(e) => updateField("dtcmPermitNumber", e.target.value)}
+                    placeholder="Enter permit number"
+                  />
+                  <button className="bg-white border border-violet-600 text-violet-700 font-semibold py-2.5 px-4 rounded-lg hover:bg-violet-50 transition">
+                    Validate
+                  </button>
+                </div>
+              </FormLabel>
+            </>
           )}
         </>
       )}
 
-      {/* Category - يظهر فقط إذا تم اختيار Emirate (و Permit type إذا كان Dubai أو Abu Dhabi) */}
       {state.uae_emirate &&
         (state.uae_emirate === "northern_emirates" ||
           (state.uae_emirate === "dubai" &&
@@ -325,7 +283,6 @@ const CoreDetailsForm = ({
           </FormLabel>
         )}
 
-      {/* Offering type - يظهر فقط إذا تم اختيار Category */}
       {state.category && (
         <FormLabel text="Offering type" required>
           <SegmentedControl
@@ -347,7 +304,6 @@ const CoreDetailsForm = ({
         </FormLabel>
       )}
 
-      {/* Rental period (Rent only) - يظهر فقط إذا تم اختيار Offering type = rent */}
       {state.offeringType === "rent" && (
         <FormLabel text="Rental period" required>
           <CustomSelect
@@ -376,16 +332,6 @@ const CoreDetailsForm = ({
         </FormLabel>
       )}
 
-      {/* Helper message when rental period is not selected for rent */}
-      {state.offeringType === "rent" && !state.rentalPeriod && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
-            <span className="font-semibold">📍 Next step:</span> Select a rental period above to continue.
-          </p>
-        </div>
-      )}
-
-      {/* Property type - يظهر فقط إذا تم اختيار Offering type و Rental period (إذا كان rent) */}
       {state.offeringType &&
         (state.offeringType === "sale" ||
           (state.offeringType === "rent" && state.rentalPeriod)) && (
@@ -405,39 +351,21 @@ const CoreDetailsForm = ({
           </FormLabel>
         )}
 
-      {/* باقي الحقول - تظهر فقط إذا تم اختيار Property type */}
       {state.propertyType && (
         <>
           <FormLabel text="Property location" required>
-            {/* Replaced LocationAutocomplete with GoogleLocationPicker */}
-            <div className="space-y-2">
-              <GoogleLocationPicker
-                onLocationSelect={(loc) => {
-                  updateField("googleAddress", loc.address);
-                  updateField("latitude", loc.lat);
-                  updateField("longitude", loc.lng);
-                  updateField("googleAddressComponents", loc.components);
-                  // Also update existing propertyLocation field if needed for compatibility (as a string maybe?)
-                  // updateField("propertyLocation", { value: 0, label: loc.address }); 
-                }}
-                initialLat={state.latitude || undefined}
-                initialLng={state.longitude || undefined}
-              />
-            </div>
+            <LocationAutocomplete
+              value={state.propertyLocation}
+              onChange={(val) => updateField("propertyLocation", val)}
+            />
           </FormLabel>
           <FormLabel text="Assigned agent" required>
             <CustomSelect
               options={agents}
               value={state.assignedAgent}
               onChange={(val) => updateField("assignedAgent", val)}
-              placeholder={agents.length === 0 ? "Loading agents..." : "Select an agent"}
-              disabled={agents.length === 0}
+              placeholder="Select an agent"
             />
-            {agents.length === 0 && (
-              <p className="text-xs text-amber-600 mt-1">
-                Loading available agents...
-              </p>
-            )}
           </FormLabel>
           <FormLabel text="Reference" required>
             <div className="relative">
