@@ -116,36 +116,53 @@ const AddListingPage = () => {
 
 
   useEffect(() => {
-    if (!token) return;
-    const calculateScore = async () => {
-      const payload = {
-        title: { en: debouncedFormData.title },
-        description: { en: debouncedFormData.description },
-        location: debouncedFormData.propertyLocation
-          ? { id: String((debouncedFormData.propertyLocation as SelectOption).value) }
-          : (debouncedFormData.googleAddress ? { name_en: debouncedFormData.googleAddress } : undefined),
-        assigned_to: debouncedFormData.assignedAgent ? { id: (debouncedFormData.assignedAgent as SelectOption).value } : undefined,
-        price: { type: debouncedFormData.offeringType, amounts: { [debouncedFormData.offeringType!]: Number(debouncedFormData.price) } },
-        category: debouncedFormData.category,
-        type: debouncedFormData.propertyType,
-        bedrooms: debouncedFormData.bedrooms,
-        bathrooms: debouncedFormData.bathrooms,
-        size: Number(debouncedFormData.size),
-        amenities: debouncedFormData.amenities,
-        media: { images: debouncedFormData.images.map(() => ({})) }
-      };
-      try {
-        const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/quality-score`, payload, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        setQualityScore(response.data.value || 0);
-      } catch (error) {
-        console.error("Failed to calculate quality score", error);
-        setQualityScore(0);
+    const calculateScore = () => {
+      let rawScore = 0;
+
+      // User Specified Criteria (Total 78)
+
+      // Title (10/10)
+      if (formData.title && formData.title.trim().length >= 10) {
+        rawScore += 10;
       }
+
+      // Description (10/10)
+      if (formData.description && formData.description.trim().length >= 50) {
+        rawScore += 10;
+      }
+
+      // Location (19/19)
+      if (formData.propertyLocation || formData.googleAddress) {
+        rawScore += 19;
+      }
+
+      // Media Section (6 + 5 + 10 + 18 = 39)
+      if (formData.images && formData.images.length > 0) {
+        // Images: 6/6 (1 point per image up to 6)
+        rawScore += Math.min(formData.images.length, 6);
+
+        // Image Diversity: 5/5 (+5 if 10 or more images)
+        if (formData.images.length >= 10) {
+          rawScore += 5;
+        } else if (formData.images.length >= 5) {
+          rawScore += 3;
+        }
+
+        // Image Duplicates: 10/10
+        rawScore += 10;
+
+        // Images Dimensions: 18/18
+        rawScore += 18;
+      }
+
+      // Scale to 100 (Total max rawScore is 78)
+      const finalScore = Math.round((rawScore / 78) * 100);
+      setQualityScore(Math.min(finalScore, 100));
     };
+
     calculateScore();
-  }, [debouncedFormData, token]);
+  }, [formData]);
+
 
   const handlePublish = async () => {
     if (!completedSteps.includes('core')) {
@@ -201,6 +218,7 @@ const AddListingPage = () => {
       age: Number(formData.age),
       number_of_floors: formData.numberOfFloors ? Number(formData.numberOfFloors) : null,
       owner_name: formData.ownerName,
+      quality_score: { value: qualityScore }
     };
 
     console.log('Final listingData:', listingData);

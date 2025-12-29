@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Search, X, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import ArchiveTable from '../components/dashboard/ArchiveTable';
 import MoreFiltersModal from '../components/dashboard/MoreFiltersModal';
+import ListingSidebar from '../components/dashboard/ListingSidebar';
 import ArchiveEmptyState from '../components/dashboard/ArchiveEmptyState';
 import { useListings } from '../context/ListingsContext';
 import { useDebounce } from '../hooks/useDebounce';
@@ -40,7 +41,8 @@ const ListingsArchive = () => {
 
     const [isSortOpen, setSortOpen] = useState(false);
     const [isFiltersModalOpen, setFiltersModalOpen] = useState(false);
-    
+    const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
+
     const applyFiltersAndFetch = useCallback(() => {
         const activeFilters = { ...filters, search: debouncedSearch };
         Object.keys(activeFilters).forEach(key => {
@@ -59,7 +61,7 @@ const ListingsArchive = () => {
     const handleApplyModalFilters = (newFiltersFromModal: typeof initialFilters) => {
         setFilters(newFiltersFromModal);
     };
-    
+
 
 
     const handleSortChange = (newSortOption: { label: string, value: { sortBy: string; sortDirection: string } }) => {
@@ -71,31 +73,35 @@ const ListingsArchive = () => {
     const renderContent = () => {
         if (loading) return <div className="flex justify-center items-center h-full"><LoadingSpinner /></div>;
         if (listings.length === 0) return <ArchiveEmptyState />;
-        return <ArchiveTable listings={listings} onActionComplete={applyFiltersAndFetch} />;
+        return <ArchiveTable
+            listings={listings}
+            onActionComplete={applyFiltersAndFetch}
+            onReferenceClick={(id) => setSelectedListingId(id)}
+        />;
     };
-    
+
     return (
         <>
             {isFiltersModalOpen && (
-                <MoreFiltersModal 
+                <MoreFiltersModal
                     onClose={() => setFiltersModalOpen(false)}
                     initialFilters={filters}
                     onApply={handleApplyModalFilters}
                 />
             )}
-            
+
             <div className="flex flex-col h-full bg-gray-50">
                 <div className="p-4 sm:p-6 md:p-8 space-y-4 lg:space-y-6 bg-gray-50 flex-shrink-0 z-10">
                     <h1 className="text-2xl font-bold text-gray-800">Listings Archive {pagination && `(${pagination.total})`}</h1>
                     <div className="space-y-4">
                         <div className="relative w-full">
                             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                            <input 
-                                type="text" 
-                                placeholder="City, community or building" 
+                            <input
+                                type="text"
+                                placeholder="City, community or building"
                                 value={filters.search}
                                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                                className="w-full bg-white pl-10 pr-8 py-2.5 border rounded-lg" 
+                                className="w-full bg-white pl-10 pr-8 py-2.5 border rounded-lg"
                             />
                             {filters.search && <X size={16} onClick={() => setFilters(prev => ({ ...prev, search: '' }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer" />}
                         </div>
@@ -106,7 +112,7 @@ const ListingsArchive = () => {
                                     <ArrowUpDown size={16} />
                                     <span className="hidden lg:inline">{currentSortLabel}</span>
                                 </button>
-                                {isSortOpen && 
+                                {isSortOpen &&
                                     <div className="absolute top-full mt-2 w-56 bg-white rounded-md shadow-lg border z-20">
                                         <ul className="py-1">
                                             {sortOptions.map(opt => (
@@ -124,6 +130,11 @@ const ListingsArchive = () => {
                 <div className="px-4 sm:px-6 md:px-8 flex-grow overflow-y-auto pb-4">
                     {renderContent()}
                 </div>
+
+                <ListingSidebar
+                    listingId={selectedListingId}
+                    onClose={() => setSelectedListingId(null)}
+                />
             </div>
         </>
     );

@@ -6,7 +6,23 @@ import ActionMenu from '../ui/ActionMenu';
 import type { Listing } from '../../context/ListingsContext';
 import SuccessToast from '../ui/SuccessToast';
 
-const tableHeaders = ["Listing Reference", "Category", "Offering", "Property Type", "Bedrooms", "Area", "Location", "Quality Score", "Price", "Status", "Last Updated", "Action"];
+const tableHeaders = [
+    "Listing Reference",
+    "Category",
+    "Offering",
+    "Property Type",
+    "Bedrooms",
+    "Area",
+    "Location",
+    "Quality score",
+    "Agent",
+    "Credits Spent",
+    "Price",
+    "Price Realism",
+    "Status",
+    "Last updated",
+    "Action"
+];
 
 interface ListingsTableProps {
     listings: Listing[];
@@ -15,9 +31,10 @@ interface ListingsTableProps {
     onSelectionChange: (id: string, isSelected: boolean) => void;
     onSelectAll: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onActionComplete: () => void;
+    onReferenceClick?: (id: string) => void;
 }
 
-const ListingsTable = ({ listings, isSelectionMode, selectedIds, onSelectionChange, onSelectAll, onActionComplete }: ListingsTableProps) => {
+const ListingsTable = ({ listings, isSelectionMode, selectedIds, onSelectionChange, onSelectAll, onActionComplete, onReferenceClick }: ListingsTableProps) => {
     const [showSuccessToast, setShowSuccessToast] = useState(false);
     const [copyMessage, setCopyMessage] = useState('');
 
@@ -69,12 +86,17 @@ const ListingsTable = ({ listings, isSelectionMode, selectedIds, onSelectionChan
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => handleCopy(listing.reference)}
-                                            className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-violet-600 transition-colors"
+                                            className="p-1 hover:bg-violet-50 rounded text-violet-600 transition-colors"
                                             title="Copy Reference"
                                         >
                                             <Copy size={14} />
                                         </button>
-                                        <Link to={`/listings/${listing.id}`} className="hover:text-violet-700 hover:underline">{listing.reference}</Link>
+                                        <button
+                                            onClick={() => onReferenceClick?.(listing.id)}
+                                            className="text-violet-600 hover:text-violet-700 hover:underline font-medium"
+                                        >
+                                            {listing.reference}
+                                        </button>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">{listing.category}</td>
@@ -84,12 +106,23 @@ const ListingsTable = ({ listings, isSelectionMode, selectedIds, onSelectionChan
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{listing.size ? `${listing.size} sqft` : '-'}</td>
                                 <td className="px-6 py-4 text-sm text-gray-600 truncate max-w-xs">{listing.location?.name}</td>
                                 <td className="px-6 py-4 whitespace-nowrap"><QualityScoreCircle score={listing.quality_score?.value || 0} /></td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {listing.assigned_to?.name || 'Unassigned'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {listing.credits_spent || 10}
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
                                     {listing.price?.amounts?.[listing.price.type]
                                         ? `${listing.price.amounts[listing.price.type].toLocaleString()} AED`
                                         : listing.price?.amounts && Object.values(listing.price.amounts)[0]
                                             ? `${Object.values(listing.price.amounts)[0].toLocaleString()} AED`
                                             : 'POA'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                    <span className="px-2 py-0.5 rounded-md bg-green-50 text-green-700 font-medium">
+                                        {listing.price_realism || 'Good'}
+                                    </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center"><span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-700 capitalize">{listing.state.type}</span></td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(listing.updated_at).toLocaleDateString()}</td>

@@ -6,14 +6,31 @@ import type { Listing } from '../../context/ListingsContext';
 import ArchiveTableActionMenu from '../ui/ArchiveTableActionMenu';
 import SuccessToast from '../ui/SuccessToast';
 
-const tableHeaders = ["Listing Reference", "Category", "Offering", "Property Type", "Bedrooms", "Area", "Location", "Quality Score", "Price", "Status", "Last Updated", "Action"];
+const tableHeaders = [
+    "Listing Reference",
+    "Category",
+    "Offering",
+    "Property Type",
+    "Bedrooms",
+    "Area",
+    "Location",
+    "Quality score",
+    "Agent",
+    "Credits Spent",
+    "Price",
+    "Price Realism",
+    "Status",
+    "Last updated",
+    "Action"
+];
 
 interface ArchiveTableProps {
     listings: Listing[];
     onActionComplete: () => void;
+    onReferenceClick?: (id: string) => void;
 }
 
-const ArchiveTable = ({ listings, onActionComplete }: ArchiveTableProps) => {
+const ArchiveTable = ({ listings, onActionComplete, onReferenceClick }: ArchiveTableProps) => {
     const [showSuccessToast, setShowSuccessToast] = useState(false);
     const [copyMessage, setCopyMessage] = useState('');
 
@@ -49,12 +66,17 @@ const ArchiveTable = ({ listings, onActionComplete }: ArchiveTableProps) => {
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => handleCopy(listing.reference)}
-                                            className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-violet-600 transition-colors"
+                                            className="p-1 hover:bg-violet-50 rounded text-violet-600 transition-colors"
                                             title="Copy Reference"
                                         >
                                             <Copy size={14} />
                                         </button>
-                                        <Link to={`/listings/${listing.id}`} className="hover:text-violet-700 hover:underline">{listing.reference}</Link>
+                                        <button
+                                            onClick={() => onReferenceClick?.(listing.id)}
+                                            className="text-violet-600 hover:text-violet-700 hover:underline font-medium"
+                                        >
+                                            {listing.reference}
+                                        </button>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">{listing.category}</td>
@@ -66,8 +88,19 @@ const ArchiveTable = ({ listings, onActionComplete }: ArchiveTableProps) => {
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <QualityScoreCircle score={listing.quality_score?.value || 0} />
                                 </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {listing.assigned_to?.name || 'Unassigned'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {listing.credits_spent || 10}
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium">
                                     {listing.price?.amounts?.[listing.price.type] ? `${listing.price.amounts[listing.price.type].toLocaleString()} AED` : 'POA'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                    <span className="px-2 py-0.5 rounded-md bg-green-50 text-green-700 font-medium">
+                                        {listing.price_realism || 'Good'}
+                                    </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center">
                                     <span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-700 capitalize">
@@ -79,7 +112,7 @@ const ArchiveTable = ({ listings, onActionComplete }: ArchiveTableProps) => {
                                 </td>
                                 {/* 3. إضافة `relative` هنا أمر حاسم لجعل القائمة المنسدلة تظهر بالنسبة لهذه الخلية */}
                                 <td className="px-6 py-4 whitespace-nowrap text-center relative">
-                                    <ArchiveTableActionMenu listingId={listing.id} onActionComplete={onActionComplete} />
+                                    <ArchiveTableActionMenu listingId={listing.id} onActionComplete={onActionComplete} reference={listing.reference} />
                                 </td>
                             </tr>
                         ))}

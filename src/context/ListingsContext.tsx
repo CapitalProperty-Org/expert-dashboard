@@ -13,11 +13,16 @@ export interface Listing {
     quality_score: { value: number };
     state: { type: string };
     updated_at: string;
-    assigned_to: { name: string };
+    assigned_to: { name: string; id?: string | number };
+    created_by?: { name: string; id?: string | number };
+    updated_by?: { name: string; id?: string | number };
+    created_at?: string;
     location: { id: number; name?: string };
     media?: {
         images?: Array<{ original: { url: string } }>;
     };
+    credits_spent?: number;
+    price_realism?: string;
 }
 
 export interface Pagination {

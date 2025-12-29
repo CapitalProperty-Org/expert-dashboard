@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MoreHorizontal, Edit2, Eye, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Edit2, Eye, Trash2, Copy } from 'lucide-react';
 import axios from 'axios';
 import { useConfirmationModal } from '../../hooks/useConfirmationModal';
 import ErrorToast from './ErrorToast';
@@ -8,9 +8,10 @@ import SuccessToast from './SuccessToast';
 interface ArchiveTableActionMenuProps {
     listingId: string;
     onActionComplete: () => void;
+    reference?: string;
 }
 
-const ArchiveTableActionMenu = ({ listingId, onActionComplete }: ArchiveTableActionMenuProps) => {
+const ArchiveTableActionMenu = ({ listingId, onActionComplete, reference }: ArchiveTableActionMenuProps) => {
     const { openModal, ConfirmationModalComponent } = useConfirmationModal();
     const [isOpen, setIsOpen] = useState(false);
     const [showErrorToast, setShowErrorToast] = useState(false);
@@ -27,6 +28,7 @@ const ArchiveTableActionMenu = ({ listingId, onActionComplete }: ArchiveTableAct
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
 
     const handleUnarchive = async () => {
         try {
@@ -49,7 +51,7 @@ const ArchiveTableActionMenu = ({ listingId, onActionComplete }: ArchiveTableAct
             onConfirm: handleUnarchive,
         });
     };
-    
+
     // يمكنك إضافة منطق الحذف هنا بنفس طريقة ActionMenu إذا أردت
 
     return (
@@ -81,20 +83,20 @@ const ArchiveTableActionMenu = ({ listingId, onActionComplete }: ArchiveTableAct
                 )}
             </div>
             {ConfirmationModalComponent}
-            
+
             {showErrorToast && (
-                <ErrorToast 
+                <ErrorToast
                     show={showErrorToast}
-                    message={errorMessage} 
-                    onClose={() => setShowErrorToast(false)} 
+                    message={errorMessage}
+                    onClose={() => setShowErrorToast(false)}
                 />
             )}
-            
+
             {showSuccessToast && (
-                <SuccessToast 
+                <SuccessToast
                     show={showSuccessToast}
-                    message="Listing unarchived successfully!" 
-                    onClose={() => setShowSuccessToast(false)} 
+                    message="Listing unarchived successfully!"
+                    onClose={() => setShowSuccessToast(false)}
                 />
             )}
         </>

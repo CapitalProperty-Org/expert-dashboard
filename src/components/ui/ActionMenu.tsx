@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MoreHorizontal, FileText, Trash2, Archive, ThumbsUp } from 'lucide-react';
+import { MoreHorizontal, FileText, Trash2, Archive, ThumbsUp, Copy } from 'lucide-react';
 import axios from 'axios';
 import { useConfirmationModal } from '../../hooks/useConfirmationModal';
 import { useListings } from '../../context/ListingsContext';
@@ -318,7 +318,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
         }
     };
 
-    const handleAction = async (action: 'archive' | 'delete' | 'createPdf' | 'publish') => {
+    const handleAction = async (action: 'archive' | 'delete' | 'createPdf' | 'publish' | 'copy') => {
         setIsLoading(true);
         setIsOpen(false);
 
@@ -339,7 +339,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                     break;
                 case 'publish':
                     await publishListing(listingId);
-                    setMessage('Listing published successfully! �');
+                    setMessage('Listing published successfully! 🚀');
                     setShowSuccessToast(true);
                     break;
             }
@@ -374,6 +374,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
             case 'createPdf': return <FileText size={16} />;
             case 'archive': return <Archive size={16} />;
             case 'delete': return <Trash2 size={16} />;
+            case 'copy': return <Copy size={16} />;
             default: return <FileText size={16} />;
         }
     };
@@ -384,6 +385,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
             case 'createPdf': return isGeneratingPdf ? 'Generating PDF...' : 'Create PDF';
             case 'archive': return 'Archive';
             case 'delete': return 'Delete';
+            case 'copy': return 'Copy Reference';
             default: return action;
         }
     };
@@ -394,6 +396,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
             case 'createPdf': return 'text-gray-700 hover:bg-gray-50';
             case 'archive': return 'text-gray-700 hover:bg-gray-50';
             case 'delete': return 'text-red-600 hover:bg-red-50';
+            case 'copy': return 'text-violet-600 hover:bg-violet-50';
             default: return 'text-gray-700 hover:bg-gray-50';
         }
     };
@@ -429,6 +432,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                             {getActionIcon('createPdf')}
                             {getActionLabel('createPdf')}
                         </button>
+
 
                         <button
                             onClick={() => confirmAction('delete')}

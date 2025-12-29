@@ -17,6 +17,7 @@ import { useConfirmationModal } from '../hooks/useConfirmationModal';
 import ApproveModal from '../components/dashboard/ApproveModal';
 import ReassignModal from '../components/dashboard/ReassignModal';
 import RejectModal from '../components/dashboard/RejectModal';
+import ListingSidebar from '../components/dashboard/ListingSidebar';
 import type { Listing } from '../context/ListingsContext';
 
 // New interface for publish payload
@@ -51,12 +52,12 @@ const initialFilters = {
 const ListingsManagement = () => {
     const { listings, pagination, loading, error, fetchListings } = useListings();
     const { openModal, ConfirmationModalComponent } = useConfirmationModal();
-    
+
     const getPriceValue = (listing: Listing): number => {
         if (!listing.price || !listing.price.amounts) return 0;
         return Object.values(listing.price.amounts)[0] || 0;
     };
-    
+
     const [filters, setFilters] = useState(initialFilters);
     const [sort, setSort] = useState(sortOptions[0].value);
     const [currentSortLabel, setCurrentSortLabel] = useState(sortOptions[0].label);
@@ -76,15 +77,16 @@ const ListingsManagement = () => {
     const [isApproving, setIsApproving] = useState(false);
     const [isReassigning, setIsReassigning] = useState(false);
     const [isRejecting, setIsRejecting] = useState(false);
-    
+
     const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
+    const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
     const [creditBalance, setCreditBalance] = useState<{
         total_credits: number;
         remaining_credits: number;
         used_credits: number;
     } | null>(null);
-    
+
     const applyFiltersAndFetch = useCallback(() => {
         const activeFilters: Record<string, string | boolean> = { ...filters, search: debouncedSearch };
         Object.keys(activeFilters).forEach(key => {
@@ -98,7 +100,7 @@ const ListingsManagement = () => {
             }
             if (!activeFilters[filterKey]) delete activeFilters[filterKey];
         });
-        
+
         const sortToSend = sort.sortBy === 'price' ? null : sort;
         fetchListings({ filters: activeFilters, sort: sortToSend });
     }, [filters, debouncedSearch, sort, fetchListings]);
@@ -120,7 +122,7 @@ const ListingsManagement = () => {
     const handleToggleDrafts = () => {
         setFilters(prev => ({ ...initialFilters, draft: !prev.draft, live: prev.draft }));
     };
-    
+
     const handleSelectionChange = (id: string, isSelected: boolean) => {
         setSelectedIds(prev => {
             const newSet = new Set(prev);
@@ -137,19 +139,19 @@ const ListingsManagement = () => {
             setSelectedIds(new Set());
         }
     };
-    
+
     const handleActionComplete = () => {
         applyFiltersAndFetch();
     };
 
-       const handleBulkAction = async (
+    const handleBulkAction = async (
         action: 'publish' | 'archive' | 'unarchive' | 'reject' | 'reassign' | 'approve',
         data?: Record<string, unknown>
     ) => {
         const promises = Array.from(selectedIds).map(id => {
             let endpoint: string;
             let payload: Record<string, unknown> = {};
-            
+
             switch (action) {
                 case 'publish':
                     endpoint = `${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/publish`;
@@ -170,22 +172,22 @@ const ListingsManagement = () => {
                     break;
                 case 'reassign':
                     endpoint = `${import.meta.env.VITE_BASE_URL}/api/listings/listings/reassign`;
-                    payload = { 
+                    payload = {
                         listing_ids: [id],
-                        to_agent_id: data?.new_assigned_to 
+                        to_agent_id: data?.new_assigned_to
                     };
                     break;
                 default:
                     return Promise.reject(new Error(`Unknown action: ${action}`));
             }
-            
+
             if (action === 'approve' || action === 'reject' || action === 'reassign') {
                 return axios.post(endpoint, payload);
             } else {
                 return axios.post(endpoint);
             }
         });
-        
+
         try {
             await Promise.all(promises);
             setSuccessMessage(`Successfully performed ${action} on ${selectedIds.size} listings.`);
@@ -258,7 +260,7 @@ const ListingsManagement = () => {
                 setIsPublishModalOpen(false);
                 setSelectedIds(new Set());
                 setIsSelectionMode(false);
-                
+
                 // Refresh listings and credit balance
                 await Promise.all([
                     applyFiltersAndFetch(),
@@ -268,9 +270,9 @@ const ListingsManagement = () => {
                 throw new Error(response.data.message || 'Failed to publish listings');
             }
         } catch (error: unknown) {
-            const errorMsg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 
-                           (error as Error)?.message || 
-                           'Failed to publish listings. Please try again.';
+            const errorMsg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+                (error as Error)?.message ||
+                'Failed to publish listings. Please try again.';
             setErrorMessage(errorMsg);
             setShowError(true);
         } finally {
@@ -310,7 +312,7 @@ const ListingsManagement = () => {
             const payload = {
                 new_assigned_to: agentId
             };
-            
+
             await handleBulkAction('reassign', payload);
             setIsReassignModalOpen(false);
         } finally {
@@ -345,25 +347,33 @@ const ListingsManagement = () => {
             return <ListingsEmptyState />;
         }
         if (listings.length === 0) return <ListingsEmptyState />;
-        
+
         const sortedListings = [...listings].sort((a, b) => {
             if (sort.sortBy === 'price') {
                 const priceA = getPriceValue(a);
                 const priceB = getPriceValue(b);
                 return sort.sortDirection === 'desc' ? priceB - priceA : priceA - priceB;
             }
-            
+
             if (sort.sortBy === 'created_at') {
                 const dateA = new Date(a.updated_at).getTime();
                 const dateB = new Date(b.updated_at).getTime();
                 return sort.sortDirection === 'desc' ? dateB - dateA : dateA - dateB;
             }
-            
+
             return 0;
         });
-        
+
         if (viewMode === 'list') {
-            return <ListingsTable listings={sortedListings} isSelectionMode={isSelectionMode} selectedIds={selectedIds} onSelectionChange={handleSelectionChange} onSelectAll={handleSelectAll} onActionComplete={handleActionComplete} />;
+            return <ListingsTable
+                listings={sortedListings}
+                isSelectionMode={isSelectionMode}
+                selectedIds={selectedIds}
+                onSelectionChange={handleSelectionChange}
+                onSelectAll={handleSelectAll}
+                onActionComplete={handleActionComplete}
+                onReferenceClick={(id) => setSelectedListingId(id)}
+            />;
         } else {
             return (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -372,38 +382,38 @@ const ListingsManagement = () => {
             );
         }
     };
-    
+
     return (
         <>
-                       {isFiltersModalOpen && <MoreFiltersModal onClose={() => setFiltersModalOpen(false)} initialFilters={filters} onApply={handleApplyModalFilters} />}
-                        {ConfirmationModalComponent}
-                        <ApproveModal 
-                            isOpen={isApproveModalOpen}
-                            onClose={() => setIsApproveModalOpen(false)}
-                            onApprove={handleApprove}
-                            selectedCount={selectedIds.size}
-                            isApproving={isApproving}
-                        />
-                        <ReassignModal 
-                            isOpen={isReassignModalOpen}
-                            onClose={() => setIsReassignModalOpen(false)}
-                            onReassign={handleReassign}
-                            selectedCount={selectedIds.size}
-                            isReassigning={isReassigning}
-                        />
-                        <RejectModal 
-                            isOpen={isRejectModalOpen}
-                            onClose={() => setIsRejectModalOpen(false)}
-                            onReject={handleReject}
-                            selectedCount={selectedIds.size}
-                            isRejecting={isRejecting}
-                        />
-            <ErrorToast 
+            {isFiltersModalOpen && <MoreFiltersModal onClose={() => setFiltersModalOpen(false)} initialFilters={filters} onApply={handleApplyModalFilters} />}
+            {ConfirmationModalComponent}
+            <ApproveModal
+                isOpen={isApproveModalOpen}
+                onClose={() => setIsApproveModalOpen(false)}
+                onApprove={handleApprove}
+                selectedCount={selectedIds.size}
+                isApproving={isApproving}
+            />
+            <ReassignModal
+                isOpen={isReassignModalOpen}
+                onClose={() => setIsReassignModalOpen(false)}
+                onReassign={handleReassign}
+                selectedCount={selectedIds.size}
+                isReassigning={isReassigning}
+            />
+            <RejectModal
+                isOpen={isRejectModalOpen}
+                onClose={() => setIsRejectModalOpen(false)}
+                onReject={handleReject}
+                selectedCount={selectedIds.size}
+                isRejecting={isRejecting}
+            />
+            <ErrorToast
                 message={errorMessage}
                 show={showError}
                 onClose={() => setShowError(false)}
             />
-            <SuccessToast 
+            <SuccessToast
                 message={successMessage}
                 show={showSuccess}
                 onClose={() => setShowSuccess(false)}
@@ -412,27 +422,27 @@ const ListingsManagement = () => {
             {/* Publish Confirmation Modal */}
             {isPublishModalOpen && (
                 <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div 
+                    <div
                         className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col p-8 text-center"
                         onClick={e => e.stopPropagation()}
                     >
                         <h2 className="text-lg font-bold text-gray-900 mb-4">Publish Listings</h2>
-                        
+
                         <div className="mb-6">
                             <p className="text-sm text-gray-600 mb-4">
                                 You are about to publish <span className="font-semibold">{selectedIds.size}</span> listings for <span className="font-semibold text-red-600">{getCreditsNeeded()}</span> credits
                             </p>
-                            
+
                             {creditBalance && (
                                 <div className="bg-gray-50 rounded-lg p-4 mb-4">
                                     <p className="text-sm text-gray-600 mb-2">Remaining balance: <span className="font-semibold text-gray-800">{creditBalance.remaining_credits}</span> credits</p>
-                                    
+
                                     {!hasEnoughCredits() && (
                                         <div className="text-red-600 text-sm font-medium">
                                             ⚠️ Insufficient credits
                                         </div>
                                     )}
-                                    
+
                                     {hasEnoughCredits() && (
                                         <div className="text-green-600 text-sm font-medium">
                                             ✓ Sufficient credits available
@@ -441,7 +451,7 @@ const ListingsManagement = () => {
                                 </div>
                             )}
                         </div>
-                        
+
                         <div className="flex justify-center gap-4">
                             <button
                                 onClick={() => setIsPublishModalOpen(false)}
@@ -465,47 +475,47 @@ const ListingsManagement = () => {
             <div className="flex flex-col h-full bg-gray-50">
                 <div className="p-4 sm:p-6 md:p-8 space-y-4 lg:space-y-6 bg-gray-50 flex-shrink-0 z-10">
                     <div className="hidden lg:flex flex-wrap gap-y-4 items-center justify-between">
-                         <h1 className="text-2xl font-bold text-black">Listings Management {pagination && `(${pagination.total})`}</h1>
-                         <div className="flex items-center gap-4">
-                             {selectedIds.size > 0 && <span className="text-sm font-semibold text-gray-700">{selectedIds.size} Selected</span>}
-                             {!isSelectionMode && listings.length > 0 && 
+                        <h1 className="text-2xl font-bold text-black">Listings Management {pagination && `(${pagination.total})`}</h1>
+                        <div className="flex items-center gap-4">
+                            {selectedIds.size > 0 && <span className="text-sm font-semibold text-gray-700">{selectedIds.size} Selected</span>}
+                            {!isSelectionMode && listings.length > 0 &&
                                 <button onClick={() => setIsSelectionMode(true)} className="text-sm bg-white border border-violet-600 text-violet-600 font-semibold py-2 px-4 rounded-md hover:bg-violet-50">Select Listings</button>
-                             }
-                             <Link to="/add-listing"><button className="bg-red-600 text-white font-semibold py-2 px-4 rounded-md flex items-center gap-2"><Plus size={16} />List new property</button></Link>
-                         </div>
+                            }
+                            <Link to="/add-listing"><button className="bg-red-600 text-white font-semibold py-2 px-4 rounded-md flex items-center gap-2"><Plus size={16} />List new property</button></Link>
+                        </div>
                     </div>
-                    
+
                     <div className="lg:hidden flex justify-between items-center">
-                         <h1 className="text-xl font-bold text-black">Listings Management {pagination && `(${pagination.total})`}</h1>
+                        <h1 className="text-xl font-bold text-black">Listings Management {pagination && `(${pagination.total})`}</h1>
                     </div>
 
                     <div className="space-y-4">
                         <div className="relative w-full">
                             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                            <input 
-                                type="text" 
-                                placeholder="City, community or building" 
+                            <input
+                                type="text"
+                                placeholder="City, community or building"
                                 value={filters.search}
                                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                                className="w-full bg-white pl-10 pr-8 py-2.5 border rounded-lg" 
+                                className="w-full bg-white pl-10 pr-8 py-2.5 border rounded-lg"
                             />
                             {filters.search && <X size={16} onClick={() => setFilters(prev => ({ ...prev, search: '' }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer" />}
                         </div>
                         <div className="flex flex-wrap gap-2 items-center justify-between text-black">
-                           <div className="flex flex-wrap gap-2 items-center">
+                            <div className="flex flex-wrap gap-2 items-center">
                                 <button onClick={() => setFiltersModalOpen(true)} className="flex items-center gap-2 text-sm font-medium bg-white border rounded-lg p-2.5 lg:px-3"><SlidersHorizontal size={16} /><span className="hidden lg:inline">All Filters</span></button>
                                 <div className="relative">
                                     <button onClick={() => setSortOpen(!isSortOpen)} className="flex items-center gap-2 text-sm font-medium bg-white border rounded-lg p-2.5 lg:px-3">
                                         <ArrowUpDown size={16} />
                                         <span className="hidden lg:inline">{currentSortLabel}</span>
                                     </button>
-                                    {isSortOpen && 
+                                    {isSortOpen &&
                                         <div className="absolute top-full mt-2 w-56 bg-white rounded-md shadow-lg border z-20">
                                             <ul className="py-1">
                                                 {sortOptions.map(opt => (
                                                     <li key={opt.label}>
-                                                        <button 
-                                                            onClick={() => handleSortChange(opt)} 
+                                                        <button
+                                                            onClick={() => handleSortChange(opt)}
                                                             className="w-full text-left block px-4 py-2 text-sm hover:bg-gray-100"
                                                         >
                                                             {opt.label}
@@ -519,7 +529,7 @@ const ListingsManagement = () => {
                                 <button onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')} className="flex items-center gap-2 text-sm font-medium bg-white border rounded-lg p-2.5 lg:px-3">
                                     {viewMode === 'list' ? <LayoutGrid size={16} /> : <List size={16} />}<span className="hidden lg:inline">{viewMode === 'list' ? 'Grid' : 'List'}</span>
                                 </button>
-                           </div>
+                            </div>
                             <div className="flex items-center gap-3">
                                 <span className="text-sm font-medium text-gray-600">Drafts / Unpublished</span>
                                 <ToggleButton isOn={filters.draft} handleToggle={handleToggleDrafts} />
@@ -531,9 +541,9 @@ const ListingsManagement = () => {
                 <div className="px-4 sm:px-6 md:px-8 flex-grow overflow-y-auto pb-28 lg:pb-4">
                     {renderContent()}
                 </div>
-                
+
                 {selectedIds.size > 0 && (
-                   <BulkActionBar 
+                    <BulkActionBar
                         selectedCount={selectedIds.size}
                         isDraftMode={filters.draft}
                         onDeselectAll={handleDeselectAll}
@@ -545,7 +555,7 @@ const ListingsManagement = () => {
                         onApprove={() => setIsApproveModalOpen(true)}
                     />
                 )}
-                
+
                 {selectedIds.size === 0 && (
                     <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t p-4 flex items-center justify-center gap-4 z-30">
                         {!isSelectionMode && listings.length > 0 && (
@@ -554,12 +564,17 @@ const ListingsManagement = () => {
                             </button>
                         )}
                         <Link to="/add-listing" className="w-full max-w-xs">
-                           <button className="bg-red-600 text-white font-semibold py-2.5 px-1 rounded-lg flex items-center justify-center gap-2 w-full hover:bg-red-700">
-                               <Plus size={16} />List new property
-                           </button>
+                            <button className="bg-red-600 text-white font-semibold py-2.5 px-1 rounded-lg flex items-center justify-center gap-2 w-full hover:bg-red-700">
+                                <Plus size={16} />List new property
+                            </button>
                         </Link>
                     </div>
                 )}
+
+                <ListingSidebar
+                    listingId={selectedListingId}
+                    onClose={() => setSelectedListingId(null)}
+                />
             </div>
         </>
     );
