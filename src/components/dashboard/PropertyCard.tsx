@@ -42,18 +42,22 @@ const PropertyCard = ({ listing, onActionComplete }: PropertyCardProps) => {
 
     return (
         <div className="bg-white border border-gray-200/80 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col">
-            <div className="relative h-40 bg-gray-200 flex items-center justify-center overflow-hidden">
-                {!imageError && imageUrl ? (
-                    <img
-                        src={imageUrl}
-                        alt={`Property ${listing.reference}`}
-                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                        onError={() => setImageError(true)}
-                    />
-                ) : (
-                    <PlaceholderImage />
-                )}
-                <div className="absolute top-2 right-2">
+            <div className="relative h-40 bg-gray-200 flex items-center justify-center">
+                <div className="absolute inset-0 overflow-hidden rounded-t-lg">
+                    {!imageError && imageUrl ? (
+                        <img
+                            src={imageUrl}
+                            alt={`Property ${listing.reference}`}
+                            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                            onError={() => setImageError(true)}
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                            <PlaceholderImage />
+                        </div>
+                    )}
+                </div>
+                <div className="absolute top-2 right-2 z-20">
                     <ActionMenu
                         listingId={listing.id}
                         onActionComplete={onActionComplete}

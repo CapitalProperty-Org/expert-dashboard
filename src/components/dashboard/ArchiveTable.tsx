@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Copy } from 'lucide-react';
 import QualityScoreCircle from '../ui/QualityScoreCircle';
 import type { Listing } from '../../context/ListingsContext';
 import ArchiveTableActionMenu from '../ui/ArchiveTableActionMenu';
+import SuccessToast from '../ui/SuccessToast';
 
 const tableHeaders = ["Listing Reference", "Category", "Offering", "Property Type", "Bedrooms", "Area", "Location", "Quality Score", "Price", "Status", "Last Updated", "Action"];
 
@@ -12,6 +14,17 @@ interface ArchiveTableProps {
 }
 
 const ArchiveTable = ({ listings, onActionComplete }: ArchiveTableProps) => {
+    const [showSuccessToast, setShowSuccessToast] = useState(false);
+    const [copyMessage, setCopyMessage] = useState('');
+
+    const handleCopy = (text?: string) => {
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+            setCopyMessage(`Reference ${text} copied to clipboard`);
+            setShowSuccessToast(true);
+        });
+    };
+
     return (
         // ## هذا هو التصحيح الكامل والنهائي ##
 
@@ -33,7 +46,16 @@ const ArchiveTable = ({ listings, onActionComplete }: ArchiveTableProps) => {
                         {listings?.map((listing) => (
                             <tr key={listing.id} className="border-b last:border-b-0 hover:bg-gray-50/50">
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">
-                                    <Link to={`/listings/${listing.id}`} className="hover:text-violet-700 hover:underline">{listing.reference}</Link>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleCopy(listing.reference)}
+                                            className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-violet-600 transition-colors"
+                                            title="Copy Reference"
+                                        >
+                                            <Copy size={14} />
+                                        </button>
+                                        <Link to={`/listings/${listing.id}`} className="hover:text-violet-700 hover:underline">{listing.reference}</Link>
+                                    </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">{listing.category}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">{listing.price.type}</td>
@@ -64,6 +86,13 @@ const ArchiveTable = ({ listings, onActionComplete }: ArchiveTableProps) => {
                     </tbody>
                 </table>
             </div>
+            {showSuccessToast && (
+                <SuccessToast
+                    show={showSuccessToast}
+                    message={copyMessage}
+                    onClose={() => setShowSuccessToast(false)}
+                />
+            )}
         </div>
     );
 };

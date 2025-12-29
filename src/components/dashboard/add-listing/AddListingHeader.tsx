@@ -2,8 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
 
-interface AddListingHeaderProps { 
-    qualityScore: number; 
+interface AddListingHeaderProps {
+    qualityScore: number;
     onPublish: () => void;
     isSubmitting: boolean;
 }
@@ -24,13 +24,13 @@ const AddListingHeader = ({ qualityScore, onPublish, isSubmitting }: AddListingH
                     <span className={cn("font-bold", qualityScore < 60 ? "text-red-500" : "text-green-500")}>{qualityScore}/100</span>
                     <p className="text-xs text-gray-500">Quality Score</p>
                 </div>
-                <button 
+                <button
                     onClick={onPublish}
                     disabled={!canPublish || isSubmitting}
                     className={cn(
                         "font-semibold py-2 px-4 rounded-md text-sm",
-                        canPublish 
-                            ? "bg-red-600 text-white hover:bg-red-700" 
+                        canPublish
+                            ? "bg-red-600 text-white hover:bg-red-700"
                             : "bg-gray-200 text-gray-400 cursor-not-allowed"
                     )}
                 >

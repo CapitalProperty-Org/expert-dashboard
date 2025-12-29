@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MoreHorizontal, FileText, Trash2, Archive } from 'lucide-react';
+import { MoreHorizontal, FileText, Trash2, Archive, ThumbsUp } from 'lucide-react';
 import axios from 'axios';
 import { useConfirmationModal } from '../../hooks/useConfirmationModal';
 import { useListings } from '../../context/ListingsContext';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import SuccessToast from './SuccessToast';
+import ErrorToast from './ErrorToast';
 
 interface ListingData {
     id: string;
@@ -45,7 +47,10 @@ interface ActionMenuProps {
 
 const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProps) => {
     const { openModal, ConfirmationModalComponent } = useConfirmationModal();
-    const { archiveListing } = useListings();
+    const { archiveListing, publishListing } = useListings();
+    const [showSuccessToast, setShowSuccessToast] = useState(false);
+    const [showErrorToast, setShowErrorToast] = useState(false);
+    const [message, setMessage] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -69,7 +74,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
         setIsGeneratingPdf(true);
         try {
             const doc = new jsPDF();
-            
+
             // Create a temporary div for rendering images
             const tempDiv = document.createElement('div');
             tempDiv.style.position = 'absolute';
@@ -80,7 +85,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
             tempDiv.style.backgroundColor = 'white';
             tempDiv.style.padding = '20px';
             tempDiv.style.fontFamily = 'Arial, sans-serif';
-            
+
             // Add header with logo placeholder
             tempDiv.innerHTML = `
                 <div style="text-align: center; margin-bottom: 20px;">
@@ -88,7 +93,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                     <h1 style="margin: 0; color: #333; font-size: 18px;">Property Finder</h1>
                 </div>
             `;
-            
+
             // Add property image placeholder
             const imageSection = document.createElement('div');
             imageSection.style.textAlign = 'center';
@@ -97,7 +102,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
             imageSection.style.backgroundColor = '#f8f9fa';
             imageSection.style.borderRadius = '8px';
             imageSection.style.border = '2px dashed #dee2e6';
-            
+
             // Try to add real property image if available
             if (listingData.images && listingData.images.length > 0) {
                 try {
@@ -108,25 +113,25 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                     img.style.objectFit = 'cover';
                     img.style.borderRadius = '8px';
                     img.style.border = '2px solid #dee2e6';
-                    
+
                     // Add loading and error handling
                     img.onload = () => {
                         imageSection.innerHTML = '';
                         imageSection.appendChild(img);
                     };
-                    
+
                     img.onerror = () => {
                         // Fallback to canvas if image fails to load
                         createCanvasPlaceholder();
                     };
-                    
+
                     // Set a timeout in case image takes too long
                     setTimeout(() => {
                         if (!img.complete) {
                             createCanvasPlaceholder();
                         }
                     }, 3000);
-                    
+
                 } catch (error) {
                     console.warn('Failed to load property image, using placeholder:', error);
                     createCanvasPlaceholder();
@@ -135,57 +140,57 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                 // No images available, use canvas placeholder
                 createCanvasPlaceholder();
             }
-            
+
             function createCanvasPlaceholder() {
                 // Create a placeholder image with property details
                 const canvas = document.createElement('canvas');
                 canvas.width = 400;
                 canvas.height = 200;
                 const ctx = canvas.getContext('2d');
-                
+
                 if (ctx) {
                     // Background
                     ctx.fillStyle = '#f8f9fa';
                     ctx.fillRect(0, 0, 400, 200);
-                    
+
                     // Border
                     ctx.strokeStyle = '#dee2e6';
                     ctx.lineWidth = 2;
                     ctx.strokeRect(0, 0, 400, 200);
-                    
+
                     // Property icon
                     ctx.fillStyle = '#667eea';
                     ctx.font = 'bold 48px Arial';
                     ctx.textAlign = 'center';
                     ctx.fillText('🏠', 200, 80);
-                    
+
                     // Property title
                     ctx.fillStyle = '#333';
                     ctx.font = 'bold 20px Arial';
                     ctx.fillText(`${listingData.bedrooms || 'N/A'} BR ${listingData.type || 'Property'}`, 200, 120);
-                    
+
                     // Location
                     ctx.fillStyle = '#666';
                     ctx.font = '14px Arial';
                     ctx.fillText(listingData.location?.name || 'Location', 200, 140);
-                    
+
                     // Price
                     ctx.fillStyle = '#28a745';
                     ctx.font = 'bold 16px Arial';
-                    const priceText = listingData.price?.amounts?.yearly 
+                    const priceText = listingData.price?.amounts?.yearly
                         ? `${listingData.price.amounts.yearly.toLocaleString()} AED`
-                        : listingData.price?.amounts?.sale 
-                        ? `${listingData.price.amounts.sale.toLocaleString()} AED`
-                        : 'POA';
+                        : listingData.price?.amounts?.sale
+                            ? `${listingData.price.amounts.sale.toLocaleString()} AED`
+                            : 'POA';
                     ctx.fillText(priceText, 200, 160);
                 }
-                
+
                 imageSection.innerHTML = '';
                 imageSection.appendChild(canvas);
             }
-            
+
             tempDiv.appendChild(imageSection);
-            
+
             // Add property details
             const detailsSection = document.createElement('div');
             detailsSection.innerHTML = `
@@ -204,7 +209,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                 </div>
             `;
             tempDiv.appendChild(detailsSection);
-            
+
             // Add amenities if available
             if (listingData.amenities && listingData.amenities.length > 0) {
                 const amenitiesSection = document.createElement('div');
@@ -212,15 +217,15 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                     <div style="margin-bottom: 20px;">
                         <h3 style="color: #333; font-size: 14px; margin-bottom: 8px;">Amenities</h3>
                         <div style="display: flex; flex-wrap: wrap; gap: 5px;">
-                            ${listingData.amenities.map(amenity => 
-                                `<span style="background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 12px; font-size: 11px;">${amenity}</span>`
-                            ).join('')}
+                            ${listingData.amenities.map(amenity =>
+                    `<span style="background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 12px; font-size: 11px;">${amenity}</span>`
+                ).join('')}
                         </div>
                     </div>
                 `;
                 tempDiv.appendChild(amenitiesSection);
             }
-            
+
             // Add multiple images if available
             if (listingData.images && listingData.images.length > 1) {
                 const imagesSection = document.createElement('div');
@@ -239,7 +244,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                 `;
                 tempDiv.appendChild(imagesSection);
             }
-            
+
             // Add description if available
             if (listingData.description?.en) {
                 const descSection = document.createElement('div');
@@ -251,7 +256,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                 `;
                 tempDiv.appendChild(descSection);
             }
-            
+
             // Add footer
             const footer = document.createElement('div');
             footer.innerHTML = `
@@ -260,10 +265,10 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                 </div>
             `;
             tempDiv.appendChild(footer);
-            
+
             // Add to DOM temporarily
             document.body.appendChild(tempDiv);
-            
+
             try {
                 // Convert to canvas
                 const canvasResult = await html2canvas(tempDiv, {
@@ -272,21 +277,21 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                     allowTaint: true,
                     backgroundColor: '#ffffff'
                 });
-                
+
                 // Convert canvas to image
                 const imgData = canvasResult.toDataURL('image/png');
-                
+
                 // Calculate dimensions
                 const imgWidth = 190;
                 const pageHeight = 297;
                 const imgHeight = (canvasResult.height * imgWidth) / canvasResult.width;
                 let heightLeft = imgHeight;
                 let position = 0;
-                
+
                 // Add first page
                 doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
                 heightLeft -= pageHeight;
-                
+
                 // Add additional pages if needed
                 while (heightLeft >= 0) {
                     position = heightLeft - imgHeight;
@@ -294,17 +299,17 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                     doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
                     heightLeft -= pageHeight;
                 }
-                
+
                 // Save PDF
                 const fileName = `property-${listingData.reference || listingId}-${new Date().toISOString().split('T')[0]}.pdf`;
                 doc.save(fileName);
                 console.log('PDF generated successfully with images:', fileName);
-                
+
             } finally {
                 // Clean up
                 document.body.removeChild(tempDiv);
             }
-            
+
         } catch (error) {
             console.error('Error generating PDF:', error);
             alert('Failed to generate PDF. Please try again.');
@@ -313,7 +318,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
         }
     };
 
-    const handleAction = async (action: 'archive' | 'delete' | 'createPdf') => {
+    const handleAction = async (action: 'archive' | 'delete' | 'createPdf' | 'publish') => {
         setIsLoading(true);
         setIsOpen(false);
 
@@ -321,19 +326,30 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
             switch (action) {
                 case 'delete':
                     await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${listingId}`);
+                    setMessage('Listing deleted successfully!');
+                    setShowSuccessToast(true);
                     break;
                 case 'archive':
                     await archiveListing(listingId);
+                    setMessage('Listing archived successfully!');
+                    setShowSuccessToast(true);
                     break;
                 case 'createPdf':
                     await generatePDF();
                     break;
+                case 'publish':
+                    await publishListing(listingId);
+                    setMessage('Listing published successfully! �');
+                    setShowSuccessToast(true);
+                    break;
             }
-            
+
             onActionComplete();
         } catch (error: unknown) {
             console.error(`Error performing ${action}:`, error);
-            // You might want to show an error toast here
+            const errMsg = error instanceof Error ? error.message : `Failed to perform ${action}.`;
+            setMessage(errMsg);
+            setShowErrorToast(true);
         } finally {
             setIsLoading(false);
         }
@@ -342,7 +358,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
     const confirmAction = (action: 'archive' | 'delete') => {
         const actionText = action.charAt(0).toUpperCase() + action.slice(1);
         const isDestructive = action === 'delete' || action === 'archive';
-        
+
         openModal({
             title: `${actionText} Listing`,
             description: `Are you sure you want to ${action} this listing?`,
@@ -354,6 +370,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
 
     const getActionIcon = (action: string) => {
         switch (action) {
+            case 'publish': return <ThumbsUp size={16} />;
             case 'createPdf': return <FileText size={16} />;
             case 'archive': return <Archive size={16} />;
             case 'delete': return <Trash2 size={16} />;
@@ -363,6 +380,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
 
     const getActionLabel = (action: string) => {
         switch (action) {
+            case 'publish': return 'Publish';
             case 'createPdf': return isGeneratingPdf ? 'Generating PDF...' : 'Create PDF';
             case 'archive': return 'Archive';
             case 'delete': return 'Delete';
@@ -372,6 +390,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
 
     const getActionColor = (action: string) => {
         switch (action) {
+            case 'publish': return 'text-violet-600 hover:bg-violet-50';
             case 'createPdf': return 'text-gray-700 hover:bg-gray-50';
             case 'archive': return 'text-gray-700 hover:bg-gray-50';
             case 'delete': return 'text-red-600 hover:bg-red-50';
@@ -392,6 +411,16 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border z-50">
                     <div className="py-1">
+                        {listingData?.state?.type === 'draft' && (
+                            <button
+                                onClick={() => handleAction('publish')}
+                                disabled={isLoading}
+                                className={`w-full text-left flex items-center gap-2 px-4 py-2 text-sm ${getActionColor('publish')} disabled:opacity-50`}
+                            >
+                                {getActionIcon('publish')}
+                                {getActionLabel('publish')}
+                            </button>
+                        )}
                         <button
                             onClick={() => handleAction('createPdf')}
                             disabled={isLoading || isGeneratingPdf}
@@ -400,7 +429,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                             {getActionIcon('createPdf')}
                             {getActionLabel('createPdf')}
                         </button>
-                        
+
                         <button
                             onClick={() => confirmAction('delete')}
                             disabled={isLoading}
@@ -409,7 +438,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                             {getActionIcon('delete')}
                             {getActionLabel('delete')}
                         </button>
-                        
+
                         <button
                             onClick={() => confirmAction('archive')}
                             disabled={isLoading}
@@ -423,6 +452,20 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
             )}
 
             {ConfirmationModalComponent}
+            {showSuccessToast && (
+                <SuccessToast
+                    show={showSuccessToast}
+                    message={message}
+                    onClose={() => setShowSuccessToast(false)}
+                />
+            )}
+            {showErrorToast && (
+                <ErrorToast
+                    show={showErrorToast}
+                    message={message}
+                    onClose={() => setShowErrorToast(false)}
+                />
+            )}
         </div>
     );
 };
