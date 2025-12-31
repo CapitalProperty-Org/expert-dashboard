@@ -50,7 +50,7 @@ interface ActionMenuProps {
 
 const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProps) => {
     const { openModal, ConfirmationModalComponent } = useConfirmationModal();
-    const { archiveListing, publishListing } = useListings();
+    const { archiveListing, publishListing, deleteListing } = useListings();
     const [showSuccessToast, setShowSuccessToast] = useState(false);
     const [showErrorToast, setShowErrorToast] = useState(false);
     const [message, setMessage] = useState('');
@@ -282,7 +282,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
         try {
             switch (action) {
                 case 'delete':
-                    await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${listingId}`);
+                    await deleteListing(listingId);
                     setMessage('Listing deleted successfully!');
                     setShowSuccessToast(true);
                     break;

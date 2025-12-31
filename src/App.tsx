@@ -46,23 +46,23 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/login" element={token ? <Navigate to="/" /> : <LoginPage />} />
       <Route path="/add-listing" element={<AddListingPage />} />
-      
+
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<DashboardLayout />}>
           <Route index element={<PerformanceOverview />} />
           <Route path="lead-insights" element={<LeadInsights />} />
           <Route path="agent-insights" element={<AgentInsights />} />
           <Route path="listings-management" element={
-    <ListingsProvider>
-        <ListingsManagement />
-    </ListingsProvider>
-} />
+            <ListingsProvider>
+              <ListingsManagement />
+            </ListingsProvider>
+          } />
 
           <Route path="listings-archive" element={
-    <ListingsProvider>
-        <ListingsArchive />
-    </ListingsProvider>
-} />
+            <ListingsProvider>
+              <ListingsArchive />
+            </ListingsProvider>
+          } />
           <Route path="listings-archive" element={<ListingsArchive />} />
           <Route path="cts-listings" element={<CtsListings />} />
           <Route path="listings-settings" element={<ListingsSettings />} />
@@ -81,7 +81,7 @@ const AppRoutes = () => {
           <Route path="users" element={<Users />} />
           <Route path="add-new-user" element={<AddNewUser />} />
           <Route path="users/:id" element={<UserDetails />} />
-          <Route path="company-profile" element={<CompanyProfile />} /> 
+          <Route path="company-profile" element={<CompanyProfile />} />
           <Route path="add-new-custom-role" element={<NewCustomRole />} />
           <Route path="roles-permissions" element={<RolesAndPermissions />} />
           <Route path="security" element={<Security />} />
@@ -96,8 +96,8 @@ const AppRoutes = () => {
 
 function App() {
   return (
-   <AuthProvider>
-        <AppRoutes />
+    <AuthProvider>
+      <AppRoutes />
     </AuthProvider>
   );
 }

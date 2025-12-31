@@ -230,7 +230,7 @@ const AddListingPage = () => {
     });
 
     try {
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings`, apiPayload, {
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings`, apiPayload, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`

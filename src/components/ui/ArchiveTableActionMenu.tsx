@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MoreHorizontal, Edit2, Eye, Trash2, Copy } from 'lucide-react';
 import axios from 'axios';
 import { useConfirmationModal } from '../../hooks/useConfirmationModal';
+import { useListings } from '../../context/ListingsContext';
 import ErrorToast from './ErrorToast';
 import SuccessToast from './SuccessToast';
 
@@ -13,6 +14,7 @@ interface ArchiveTableActionMenuProps {
 
 const ArchiveTableActionMenu = ({ listingId, onActionComplete, reference }: ArchiveTableActionMenuProps) => {
     const { openModal, ConfirmationModalComponent } = useConfirmationModal();
+    const { deleteListing } = useListings();
     const [isOpen, setIsOpen] = useState(false);
     const [showErrorToast, setShowErrorToast] = useState(false);
     const [showSuccessToast, setShowSuccessToast] = useState(false);
@@ -52,7 +54,28 @@ const ArchiveTableActionMenu = ({ listingId, onActionComplete, reference }: Arch
         });
     };
 
-    // يمكنك إضافة منطق الحذف هنا بنفس طريقة ActionMenu إذا أردت
+    const handleDelete = async () => {
+        try {
+            await deleteListing(listingId);
+            setShowSuccessToast(true);
+            onActionComplete();
+        } catch (error) {
+            setErrorMessage('Failed to delete listing.');
+            setShowErrorToast(true);
+            console.error('Error deleting:', error);
+        }
+    };
+
+    const confirmDelete = () => {
+        setIsOpen(false);
+        openModal({
+            title: 'Are you sure you want to delete this listing?',
+            description: 'This action cannot be undone.',
+            confirmText: 'Delete',
+            isDestructive: true,
+            onConfirm: handleDelete,
+        });
+    };
 
     return (
         <>
@@ -74,7 +97,7 @@ const ArchiveTableActionMenu = ({ listingId, onActionComplete, reference }: Arch
                                 </button>
                             </li>
                             <li>
-                                <button className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                <button onClick={confirmDelete} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                                     <Trash2 size={16} /> Delete
                                 </button>
                             </li>
