@@ -12,13 +12,13 @@ interface AccordionSectionProps {
 
 const AccordionSection = ({ title, isOpen, isCompleted, isLocked, onToggle, children }: AccordionSectionProps) => {
   const renderIcon = () => {
-      if (isCompleted) {
-          return <CheckCircle2 className="text-green-500" />;
-      }
-      if (isLocked) {
-          return <Lock className="text-gray-400" />;
-      }
-      return <PlusCircle className="text-gray-400" />;
+    if (isCompleted) {
+      return <CheckCircle2 className="text-green-500" />;
+    }
+    if (isLocked) {
+      return <Lock className="text-gray-400" />;
+    }
+    return <PlusCircle className="text-gray-400" />;
   };
 
   return (
@@ -26,13 +26,13 @@ const AccordionSection = ({ title, isOpen, isCompleted, isLocked, onToggle, chil
     <div className={cn("bg-white border border-gray-300 rounded-lg", isLocked ? "bg-[#f3f4f5]" : "border-gray-400")}>
       <button onClick={onToggle} disabled={isLocked} className="w-full flex justify-between items-center p-4 disabled:cursor-not-allowed">
         <div className="flex items-center gap-3">
-            {renderIcon()}
-            <h2 className={cn("text-lg font-bold", isLocked ? "text-gray-400" : "text-gray-800")}>{title}</h2>
+          {renderIcon()}
+          <h2 className={cn("text-lg font-bold", isLocked ? "text-gray-400" : "text-gray-800")}>{title}</h2>
         </div>
         {!isLocked && (isOpen ? <ChevronUp /> : <ChevronDown />)}
       </button>
-      {isOpen && !isLocked && (
-        <div className="p-6 border-t border-gray-200/80">
+      {!isLocked && (
+        <div className={cn("p-6 border-t border-gray-200/80", !isOpen && "hidden")}>
           {children}
         </div>
       )}

@@ -14,7 +14,8 @@ const DescriptionForm = ({ state, dispatch, onComplete }: FormProps) => {
 
     useEffect(() => {
         // يكتمل القسم عند إدخال العنوان والوصف
-        if (state.title && state.description) {
+        if (state.title && state.title.trim().length > 0 &&
+            state.description && state.description.trim().length > 0) {
             onComplete();
         }
     }, [state.title, state.description, onComplete]);

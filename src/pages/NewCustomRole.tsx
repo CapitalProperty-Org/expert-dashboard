@@ -10,6 +10,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 interface BaseRole {
     id: number;
     name: string;
+    type: string;
 }
 
 interface PermissionRule {
@@ -35,7 +36,7 @@ const NewCustomRole = () => {
     const [selectedBaseRoleId, setSelectedBaseRoleId] = useState<{ value: string | number; label: string } | null>(null);
     const [permissionRules, setPermissionRules] = useState<PermissionRule[]>([]);
     const [selectedPermissions, setSelectedPermissions] = useState<Set<number>>(new Set());
-    
+
     const [loadingBaseRoles, setLoadingBaseRoles] = useState(true);
     const [loadingPermissions, setLoadingPermissions] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +48,9 @@ const NewCustomRole = () => {
             setLoadingBaseRoles(true);
             try {
                 const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/roles`);
-                setBaseRoles(response.data);
+                const allRoles: BaseRole[] = response.data;
+                const filteredBaseRoles = allRoles.filter(role => role.type === 'base');
+                setBaseRoles(filteredBaseRoles);
             } catch (err: unknown) {
                 console.error("Failed to load base roles:", err);
                 setError("Failed to load base roles.");
@@ -108,7 +111,7 @@ const NewCustomRole = () => {
         const editablePermissionIds = permissionRules
             .filter(rule => rule.editable)
             .map(rule => rule.permission.id);
-        
+
         setSelectedPermissions(prev => {
             const newSet = new Set(prev);
             if (shouldSelectAll) {
@@ -120,9 +123,9 @@ const NewCustomRole = () => {
         });
     };
 
-    const baseRoleOptions = useMemo(() => 
+    const baseRoleOptions = useMemo(() =>
         baseRoles.map(role => ({ value: role.id.toString(), label: role.name })),
-    [baseRoles]);
+        [baseRoles]);
 
     // الآن التحقق يعتمد فقط على اختيار دور أساسي (اسم الدور اختياري)
     const isFormValid = selectedBaseRoleId;
@@ -147,10 +150,10 @@ const NewCustomRole = () => {
         try {
             // 2. إرسال طلب PUT إلى الـ endpoint الصحيح
             await axios.put(
-                `${import.meta.env.VITE_BASE_URL}/api/permissions-matrix/roles/${selectedBaseRoleId.value}/editable-permissions`, 
+                `${import.meta.env.VITE_BASE_URL}/api/permissions-matrix/roles/${selectedBaseRoleId.value}/editable-permissions`,
                 editablePermissionsToSave // Body الطلب هو مصفوفة من الأرقام
             );
-            
+
             alert('Permissions updated successfully!');
             navigate('/roles-permissions');
 
@@ -187,9 +190,9 @@ const NewCustomRole = () => {
 
                         {loadingPermissions && <div className="flex justify-center py-8"><LoadingSpinner /></div>}
                         {error && !loadingPermissions && <p className="text-red-500 text-center py-4">{error}</p>}
-                        
+
                         {permissionRules.length > 0 && !loadingPermissions && (
-                            <PermissionsList 
+                            <PermissionsList
                                 permissions={permissionRules}
                                 selectedPermissions={selectedPermissions}
                                 onPermissionChange={handlePermissionChange}

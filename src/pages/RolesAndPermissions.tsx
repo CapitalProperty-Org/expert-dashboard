@@ -10,6 +10,8 @@ interface Role {
     id: number;
     name: string;
     roleKey: string;
+    type?: string;
+    baseRoleKey?: string;
 }
 
 interface Permission {
@@ -50,13 +52,15 @@ const RolesAndPermissions = () => {
                     'limited_access_user'
                 ];
 
-                roles = [...roles].sort((a, b) => {
-                    const indexA = roleOrder.indexOf(a.roleKey || '');
-                    const indexB = roleOrder.indexOf(b.roleKey || '');
-                    if (indexA === -1) return 1;
-                    if (indexB === -1) return -1;
-                    return indexA - indexB;
-                });
+                roles = [...roles]
+                    .filter(r => r.type === 'base')
+                    .sort((a, b) => {
+                        const indexA = roleOrder.indexOf(a.roleKey || '');
+                        const indexB = roleOrder.indexOf(b.roleKey || '');
+                        if (indexA === -1) return 1;
+                        if (indexB === -1) return -1;
+                        return indexA - indexB;
+                    });
 
 
                 const permissionSet = new Set<string>(

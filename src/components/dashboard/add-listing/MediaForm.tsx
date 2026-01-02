@@ -3,34 +3,48 @@ import { useDropzone } from 'react-dropzone';
 import FormLabel from "../../ui/FormLabel";
 
 interface MediaFormProps {
-  images: File[];
-  onSetImages: (files: File[]) => void;
+    images: (File | { url: string; preview?: string; })[];
+    onSetImages: (files: (File | { url: string; preview?: string; })[]) => void;
+    onComplete?: () => void;
 }
 
-type PreviewFile = File & { preview: string };
+type PreviewFile = (File | { url: string; preview?: string; }) & { preview: string };
 
-const MediaForm = ({ images, onSetImages }: MediaFormProps) => {
+const MediaForm = ({ images, onSetImages, onComplete }: MediaFormProps) => {
     const [previews, setPreviews] = useState<PreviewFile[]>([]);
 
     useEffect(() => {
         // إنشاء روابط المعاينة فقط عندما تتغير قائمة `images` الرئيسية
-        const newPreviews = images.map(file => Object.assign(file, {
-            preview: URL.createObjectURL(file)
-        }));
+        const newPreviews = images.map(file => {
+            if ('url' in file) {
+                return { ...file, preview: file.url } as PreviewFile;
+            }
+            return Object.assign(file, {
+                preview: URL.createObjectURL(file as File)
+            }) as PreviewFile;
+        });
         setPreviews(newPreviews);
+
+        if (images.length > 0 && onComplete) {
+            onComplete();
+        }
 
         // Nettoyage des URLs d'objet lorsque le composant est démonté ou lorsque قائمة الصور تتغير
         return () => {
-            newPreviews.forEach(file => URL.revokeObjectURL(file.preview));
+            newPreviews.forEach(file => {
+                if (file instanceof File) {
+                    URL.revokeObjectURL(file.preview);
+                }
+            });
         };
-    }, [images]);
+    }, [images, onComplete]);
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         // إضافة الملفات الجديدة إلى القائمة الحالية في الحالة الرئيسية
         onSetImages([...images, ...acceptedFiles]);
     }, [images, onSetImages]);
 
-    const removeFile = (fileToRemove: File) => {
+    const removeFile = (fileToRemove: (File | { url: string; preview?: string; })) => {
         // إزالة الملف من الحالة الرئيسية
         onSetImages(images.filter(file => file !== fileToRemove));
     };
@@ -38,9 +52,9 @@ const MediaForm = ({ images, onSetImages }: MediaFormProps) => {
     const { getRootProps, getInputProps } = useDropzone({
         onDrop,
         accept: {
-          'image/jpeg': [],
-          'image/png': [],
-          'image/bmp': []
+            'image/jpeg': [],
+            'image/png': [],
+            'image/bmp': []
         }
     });
 
@@ -57,11 +71,11 @@ const MediaForm = ({ images, onSetImages }: MediaFormProps) => {
                     {previews.map((file, index) => (
                         <div key={index} className="relative">
                             <img src={file.preview} alt={`preview ${index}`} className="w-full h-32 object-cover rounded-lg" />
-                            <button 
+                            <button
                                 onClick={(e) => {
                                     e.stopPropagation(); // منع فتح نافذة الرفع عند الضغط على زر الحذف
                                     removeFile(file);
-                                }} 
+                                }}
                                 className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-lg hover:bg-red-700"
                             >
                                 X

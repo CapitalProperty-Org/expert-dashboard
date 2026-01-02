@@ -5,16 +5,17 @@ import { cn } from '../../../lib/utils';
 interface AddListingHeaderProps {
     qualityScore: number;
     onPublish: () => void;
+    onExit?: () => void;
     isSubmitting: boolean;
 }
 
-const AddListingHeader = ({ qualityScore, onPublish, isSubmitting }: AddListingHeaderProps) => {
+const AddListingHeader = ({ qualityScore, onPublish, onExit, isSubmitting }: AddListingHeaderProps) => {
     const navigate = useNavigate();
     const canPublish = qualityScore >= 60;
 
     return (
         <header className="bg-white border-b border-gray-200 p-4 sticky top-0 z-30 flex items-center justify-between">
-            <button onClick={() => navigate(-1)} className="bg-violet-600 text-white font-semibold py-2 px-4 rounded-md text-sm hover:bg-violet-700">Exit</button>
+            <button onClick={onExit || (() => navigate(-1))} className="bg-violet-600 text-white font-semibold py-2 px-4 rounded-md text-sm hover:bg-violet-700">Exit</button>
             <div className="hidden lg:flex items-center gap-4">
                 <button className="text-sm bg-violet-100 text-violet-700 font-semibold py-1.5 px-3 rounded-md">What's changed</button>
                 <button className="text-sm bg-white border border-gray-300 text-gray-700 font-semibold py-1.5 px-3 rounded-md">Watch tutorial</button>

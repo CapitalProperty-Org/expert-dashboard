@@ -1,6 +1,8 @@
 import React from 'react';
 import { Check, X } from 'lucide-react';
 
+import RoleTooltip from './RoleTooltip';
+
 const Checkmark = () => <Check size={20} className="text-green-600 mx-auto" />;
 const Crossmark = () => <X size={20} className="text-red-500 mx-auto" />;
 
@@ -8,6 +10,8 @@ interface Role {
     id: number;
     name: string;
     roleKey: string;
+    type?: string;
+    baseRoleKey?: string;
 }
 
 interface Permission {
@@ -32,7 +36,16 @@ const PermissionsTable = ({ roles, groupedPermissions, permissionSet }: Permissi
                         </th>
                         {roles.map((role) => (
                             <th key={role.id} scope="col" className="px-6 py-4 text-center text-sm font-bold text-gray-800 whitespace-nowrap">
-                                {role.name}
+                                <RoleTooltip roleKey={role.roleKey}>
+                                    <div>
+                                        <div>{role.name}</div>
+                                        {role.type !== 'base' && role.baseRoleKey && (
+                                            <div className="text-xs text-gray-500 font-normal mt-1">
+                                                Base: {role.baseRoleKey.replace(/_/g, ' ')}
+                                            </div>
+                                        )}
+                                    </div>
+                                </RoleTooltip>
                             </th>
                         ))}
                     </tr>

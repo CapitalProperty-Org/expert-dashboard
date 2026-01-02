@@ -60,7 +60,7 @@ export interface ListingState {
   amenities: string[];
   title: string;
   description: string;
-  images: File[]; // تم تعديل هنا
+  images: (File | { url: string; preview?: string; })[]; // تم تعديل هنا
   latitude?: number | null;
   longitude?: number | null;
   googleAddress?: string | null;
@@ -71,7 +71,8 @@ export type ListingAction =
   | { type: 'UPDATE_FIELD'; field: keyof ListingState; value: unknown; }
   | { type: 'RESET_PERMIT' }
   | { type: 'RESET_REQUIREMENTS' }
-  | { type: 'SET_IMAGES'; value: File[] }; // تم تعديل هنا
+  | { type: 'SET_IMAGES'; value: (File | { url: string; preview?: string; })[] }
+  | { type: 'SET_STATE'; payload: Partial<ListingState> };
 
 export interface Notification {
   id: string;

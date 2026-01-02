@@ -371,9 +371,10 @@ const CoreDetailsForm = ({
             <div className="relative">
               <input
                 type="text"
-                className="w-full p-2.5 border rounded-lg pr-12 bg-white text-gray-900"
+                readOnly
+                className="w-full p-2.5 border rounded-lg pr-12 bg-gray-100 text-gray-500 cursor-not-allowed"
                 value={state.reference}
-                onChange={(e) => updateField("reference", e.target.value)}
+                onChange={(e) => { }} // Read-only
                 maxLength={50}
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">

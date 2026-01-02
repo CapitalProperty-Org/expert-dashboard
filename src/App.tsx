@@ -57,6 +57,11 @@ const AppRoutes = () => {
               <ListingsManagement />
             </ListingsProvider>
           } />
+          <Route path="listings/edit/:id" element={
+            <ListingsProvider>
+              <AddListingPage />
+            </ListingsProvider>
+          } />
 
           <Route path="listings-archive" element={
             <ListingsProvider>
