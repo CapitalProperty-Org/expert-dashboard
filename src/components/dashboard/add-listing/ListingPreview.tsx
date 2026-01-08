@@ -10,20 +10,20 @@ const ListingPreview = ({ state, images = [] }: { state: ListingState; images?: 
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
     useEffect(() => {
-        const newImagePreviews = images.map(img => {
+        const createdUrls: string[] = [];
+        const previews = images.map(img => {
             if (img instanceof File) {
-                return URL.createObjectURL(img);
+                const url = URL.createObjectURL(img);
+                createdUrls.push(url);
+                return url;
             }
             return img.preview || img.url;
         });
-        setImagePreviews(newImagePreviews);
+
+        setImagePreviews(previews);
 
         return () => {
-            images.forEach(img => {
-                if (img instanceof File) {
-                    URL.revokeObjectURL(URL.createObjectURL(img)); // This is actually inefficient but revoking is important
-                }
-            });
+            createdUrls.forEach(url => URL.revokeObjectURL(url));
         };
     }, [images]);
 

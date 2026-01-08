@@ -117,7 +117,7 @@ const AddListingPage = () => {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const listing = res.data;
-        console.log('Fetched listing data for edit:', listing);
+
 
         // Parse available_from to determine available and availableDate
         let available: 'immediately' | 'fromDate' = 'immediately';
@@ -172,7 +172,7 @@ const AddListingPage = () => {
           available,
           availableDate,
         };
-        console.log('Dispatching payload:', payload);
+
 
         // Map backend listing to frontend state
         dispatch({
@@ -202,13 +202,13 @@ const AddListingPage = () => {
 
     const fetchReference = async () => {
       try {
-        console.log('Fetching reference from:', `${import.meta.env.VITE_BASE_URL}/api/listings/listings/reference`);
+
         const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/reference`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        console.log('Reference fetch response:', res.data);
+
         if (res.data?.reference) {
-          console.log('Dispatching reference update:', res.data.reference);
+
           dispatch({ type: 'UPDATE_FIELD', field: 'reference', value: res.data.reference });
         } else {
           console.warn('No reference in response data');
@@ -292,6 +292,7 @@ const AddListingPage = () => {
     setIsPromotionModalOpen(false);
     setIsSubmitting(true);
     setError(null);
+    setShowSuccess(false);
 
     // 1. Prepare Listing Data (Save as Draft first)
     // We intentionally do NOT set state to 'live' here. We let the publish endpoint handle that.
@@ -345,6 +346,7 @@ const AddListingPage = () => {
       rera_permit_number: formData.reraPermitNumber,
       dtcm_permit_number: formData.dtcmPermitNumber
     };
+
 
     const apiPayload = new FormData();
     const existingImages = formData.images.filter((img): img is { url: string } => !('lastModified' in img) && 'url' in img);
