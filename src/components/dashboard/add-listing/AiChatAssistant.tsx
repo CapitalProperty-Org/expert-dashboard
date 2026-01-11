@@ -4,6 +4,7 @@ import { X, Plus } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
 import type { ListingState } from '../../../types';
+import ErrorToast from '../../ui/ErrorToast';
 
 interface AiChatAssistantProps {
     isOpen: boolean;
@@ -44,6 +45,8 @@ const AiChatAssistant = ({ isOpen, onClose, currentDescription, onAcceptContent,
     const [customKeywords, setCustomKeywords] = useState<string[]>([]);
     const [customInput, setCustomInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [showErrorToast, setShowErrorToast] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     if (!isOpen) return null;
 
@@ -83,7 +86,8 @@ const AiChatAssistant = ({ isOpen, onClose, currentDescription, onAcceptContent,
             }
         } catch (error) {
             console.error('AI Error', error);
-            alert('Failed to generate description. Please try again.');
+            setErrorMessage('Failed to generate description. Please try again.');
+            setShowErrorToast(true);
         } finally {
             setIsLoading(false);
         }
@@ -187,6 +191,13 @@ const AiChatAssistant = ({ isOpen, onClose, currentDescription, onAcceptContent,
                     </button>
                 </div>
             </div>
+            {showErrorToast && (
+                <ErrorToast
+                    show={showErrorToast}
+                    message={errorMessage}
+                    onClose={() => setShowErrorToast(false)}
+                />
+            )}
         </div>
     );
 };

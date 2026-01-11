@@ -264,7 +264,8 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
 
         } catch (error) {
             console.error('Error generating PDF:', error);
-            alert('Failed to generate PDF. Please try again.');
+            setMessage('Failed to generate PDF. Please try again.');
+            setShowErrorToast(true);
         } finally {
             setIsGeneratingPdf(false);
             setVisible(false); // Close menu after action

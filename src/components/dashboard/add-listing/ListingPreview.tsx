@@ -2,13 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, BedDouble, Bath, Ruler, Check, Monitor, User, Home, Camera, Scan } from 'lucide-react';
 import type { ListingState } from '../../../types';
 import { formatDistanceToNow } from 'date-fns';
+import ErrorToast from '../../ui/ErrorToast';
 
 const ListingPreview = ({ state, images = [], listingId, isFullPage = false }: { state: ListingState; images?: (File | { url: string; preview?: string; })[]; listingId?: string | number; isFullPage?: boolean }) => {
 
     const locationLabel = state.propertyLocation ? state.propertyLocation.label : 'Listing location';
     const agentLabel = state.assignedAgent ? state.assignedAgent.label : 'Agent Name';
 
+
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+    const [showErrorToast, setShowErrorToast] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     useEffect(() => {
         const createdUrls: string[] = [];
@@ -47,7 +51,8 @@ const ListingPreview = ({ state, images = [], listingId, isFullPage = false }: {
         if (listingId) {
             window.open(`/listings/preview/${listingId}`, '_blank');
         } else {
-            alert("Please save the listing first to see the full preview.");
+            setErrorMessage("Please save the listing first to see the full preview.");
+            setShowErrorToast(true);
         }
     };
 
@@ -257,6 +262,13 @@ const ListingPreview = ({ state, images = [], listingId, isFullPage = false }: {
                     </div>
                 </div>
             </div>
+            {showErrorToast && (
+                <ErrorToast
+                    show={showErrorToast}
+                    message={errorMessage}
+                    onClose={() => setShowErrorToast(false)}
+                />
+            )}
         </div>
     );
 };
