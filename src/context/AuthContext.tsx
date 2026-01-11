@@ -7,6 +7,7 @@ interface User {
   email: string | undefined;
   role: string;
   legacyRole: string;
+  clientId: number;
   profilePhotoUrl?: string; // إضافة رابط الصورة للمستخدم
 }
 interface Role {

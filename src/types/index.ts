@@ -68,6 +68,7 @@ export interface ListingState {
   longitude?: number | null;
   googleAddress?: string | null;
   googleAddressComponents?: any; // or specific type
+  updatedAt?: string | null;
 }
 
 export type ListingAction =

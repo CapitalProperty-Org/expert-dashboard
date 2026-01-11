@@ -213,7 +213,9 @@ const UserDetails = () => {
     }, [id, isAuthLoading, roles]);
 
     const roleOptions = useMemo(() =>
-        roles.map(role => ({ value: role.id.toString(), label: role.name })),
+        roles
+            .filter(role => role.type === 'base')
+            .map(role => ({ value: role.id.toString(), label: role.name })),
         [roles]);
 
     const licenseOptions = [

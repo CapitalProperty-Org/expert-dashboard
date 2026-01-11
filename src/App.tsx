@@ -35,6 +35,8 @@ import { ListingsProvider } from "./context/ListingsContext";
 import { CreditsProvider } from "./context/CreditsContext";
 import LeadDetails from "./pages/LeadDetails";
 
+import ListingPreviewPage from "./pages/ListingPreviewPage";
+
 const AppRoutes = () => {
   const { token, isLoading } = useAuth();
 
@@ -46,6 +48,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/login" element={token ? <Navigate to="/" /> : <LoginPage />} />
       <Route path="/add-listing" element={<AddListingPage />} />
+      <Route path="/listings/preview/:id" element={<ListingPreviewPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<DashboardLayout />}>

@@ -2,16 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Info, Briefcase, Phone, User, FileText, Building } from 'lucide-react';
 import { fetchClientById } from '../services/clientService';
 import type { ClientData } from '../services/clientService';
+import { useAuth } from '../context/AuthContext';
 
 const CompanyProfile = () => {
+  const { user } = useAuth();
   const [profileData, setProfileData] = useState<ClientData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCompanyProfile = async () => {
+      if (!user?.clientId) {
+        setLoading(false);
+        return;
+      }
       try {
-        // استخدام الخدمة الجديدة لجلب بيانات العميل
-        const clientData = await fetchClientById(1);
+        // استخدام الخدمة الجديدة لجلب بيانات العميل بشكل ديناميكي
+        const clientData = await fetchClientById(user.clientId);
         setProfileData(clientData);
       } catch (err) {
         // في حالة فشل API، استخدم البيانات التجريبية

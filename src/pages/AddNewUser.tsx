@@ -336,7 +336,9 @@ const AddNewUser = () => {
     const [success, setSuccess] = useState<string | null>(null);
 
     const roleOptions = useMemo(() => {
-        const options = roles.map(role => ({ value: role.id.toString(), label: role.name, key: role.roleKey }));
+        const options = roles
+            .filter(role => role.type === 'base')
+            .map(role => ({ value: role.id.toString(), label: role.name, key: role.roleKey }));
         console.log('AddNewUser: roleOptions computed:', options);
         return options;
     }, [roles]);

@@ -13,15 +13,33 @@ interface AiChatAssistantProps {
     listingState: ListingState;
 }
 
-const SUGGESTED_KEYWORDS = [
-    'Apartment',
-    'Unfurnished',
-    'Balcony',
-    'Kitchen Appliances'
-];
+// Helper to extract dynamic keywords from state
+const getSuggestedKeywords = (state: ListingState): string[] => {
+    const keywords: string[] = [];
+
+    if (state.propertyType) keywords.push(state.propertyType);
+    if (state.furnishingType) keywords.push(state.furnishingType);
+    if (state.bedrooms) keywords.push(`${state.bedrooms} Bedrooms`);
+
+    // Add location
+    if (state.propertyLocation?.label) {
+        // Just take the first part of the location for brevity if it's long? 
+        // Or full label. Let's use the full label but maybe truncate if needed.
+        // For now, full label is fine.
+        keywords.push(state.propertyLocation.label);
+    }
+
+    // Add first 3 amenities
+    if (state.amenities && state.amenities.length > 0) {
+        keywords.push(...state.amenities.slice(0, 4));
+    }
+
+    return Array.from(new Set(keywords)); // Remove duplicates
+};
 
 const AiChatAssistant = ({ isOpen, onClose, currentDescription, onAcceptContent, listingState }: AiChatAssistantProps) => {
     const { token } = useAuth();
+    const suggestedKeywords = getSuggestedKeywords(listingState);
     const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
     const [customKeywords, setCustomKeywords] = useState<string[]>([]);
     const [customInput, setCustomInput] = useState('');
@@ -91,13 +109,13 @@ const AiChatAssistant = ({ isOpen, onClose, currentDescription, onAcceptContent,
                     <div>
                         <h4 className="text-sm font-bold text-gray-700 mb-3">Suggested keywords</h4>
                         <div className="flex flex-wrap gap-2">
-                            {SUGGESTED_KEYWORDS.map(kw => (
+                            {suggestedKeywords.map(kw => (
                                 <button
                                     key={kw}
                                     onClick={() => toggleKeyword(kw)}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${selectedKeywords.includes(kw)
-                                            ? 'bg-violet-50 border-violet-600 text-violet-700 shadow-sm'
-                                            : 'bg-white border-violet-200 text-violet-600 hover:border-violet-400'
+                                        ? 'bg-violet-50 border-violet-600 text-violet-700 shadow-sm'
+                                        : 'bg-white border-violet-200 text-violet-600 hover:border-violet-400'
                                         }`}
                                 >
                                     {kw}

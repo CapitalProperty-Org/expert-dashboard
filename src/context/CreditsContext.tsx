@@ -32,7 +32,7 @@ interface CreditsProviderProps {
 }
 
 export const CreditsProvider: React.FC<CreditsProviderProps> = ({ children }) => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [transactions, setTransactions] = useState<ICreditTransaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<ICreditTransaction[]>([]);
   const [balance, setBalance] = useState<ICreditBalance>({ current: 0, earned: 0, spent: 0, expired: 0 });
@@ -41,26 +41,14 @@ export const CreditsProvider: React.FC<CreditsProviderProps> = ({ children }) =>
   const [customerId, setCustomerId] = useState<number | null>(null);
   const [filters, setFiltersState] = useState<ICreditFilters>({});
 
-  // جلب customer_id من endpoint الـ me
-  const fetchCustomerId = useCallback(async () => {
-    if (!token) return;
-    try {
-      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/users/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const userId = response.data.id || response.data.user_id;
-      if (userId) {
-        setCustomerId(parseInt(userId.toString()));
-        // تحديث الفلاتر مع customer_id الجديد
-        setFiltersState(prev => ({ ...prev, customer_id: parseInt(userId.toString()) }));
-      }
-    } catch (err) {
-      console.error('Error fetching customer ID:', err);
-      // fallback إلى customer_id افتراضي
-      setCustomerId(1);
-      setFiltersState(prev => ({ ...prev, customer_id: 1 }));
+  // Sync customerId from user context
+  useEffect(() => {
+    if (user?.id) {
+      const id = parseInt(user.id.toString());
+      setCustomerId(id);
+      setFiltersState(prev => ({ ...prev, customer_id: id }));
     }
-  }, [token]);
+  }, [user]);
 
   const fetchBalance = useCallback(async () => {
     if (!token) return;
@@ -136,13 +124,12 @@ export const CreditsProvider: React.FC<CreditsProviderProps> = ({ children }) =>
     setError(null);
   }, []);
 
-  // جلب customer_id عند التحميل او تغيير التوكن
+  // جلب البيانات عند التحميل او تغيير التوكن
   useEffect(() => {
     if (token) {
-      fetchCustomerId();
       fetchBalance();
     }
-  }, [fetchCustomerId, fetchBalance, token]);
+  }, [fetchBalance, token]);
 
   // جلب البيانات بعد الحصول على customer_id
   useEffect(() => {

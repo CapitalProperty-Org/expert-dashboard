@@ -1,15 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
+import { formatDistanceToNow } from 'date-fns';
 
 interface AddListingHeaderProps {
     qualityScore: number;
     onPublish: () => void;
     onExit?: () => void;
     isSubmitting: boolean;
+    saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
+    lastSaved?: Date | null;
 }
 
-const AddListingHeader = ({ qualityScore, onPublish, onExit, isSubmitting }: AddListingHeaderProps) => {
+const AddListingHeader = ({ qualityScore, onPublish, onExit, isSubmitting, saveStatus = 'idle', lastSaved = null }: AddListingHeaderProps) => {
     const navigate = useNavigate();
     const canPublish = qualityScore >= 60;
 
@@ -21,6 +24,13 @@ const AddListingHeader = ({ qualityScore, onPublish, onExit, isSubmitting }: Add
                 <button className="text-sm bg-white border border-gray-300 text-gray-700 font-semibold py-1.5 px-3 rounded-md">Watch tutorial</button>
             </div>
             <div className="flex items-center gap-4">
+                <div className="text-right text-xs text-gray-500 mr-2">
+                    {saveStatus === 'saving' && <span>Saving...</span>}
+                    {saveStatus === 'saved' && lastSaved && (
+                        <span>Last updated: {formatDistanceToNow(lastSaved, { addSuffix: true })}</span>
+                    )}
+                    {saveStatus === 'error' && <span className="text-red-500">Error saving</span>}
+                </div>
                 <div className="text-right lg:text-center">
                     <span className={cn("font-bold", qualityScore < 60 ? "text-red-500" : "text-green-500")}>{qualityScore}/100</span>
                     <p className="text-xs text-gray-500">Quality Score</p>
