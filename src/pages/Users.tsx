@@ -28,6 +28,7 @@ export interface User {
             status: string;
         };
     };
+    imageUrl?: string;
 }
 
 const Users = () => {

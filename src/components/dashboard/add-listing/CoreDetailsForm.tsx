@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import type { ListingAction, ListingState, SelectOption } from "../../../types";
 import CustomSelect from "../../ui/CustomSelect";
 import SegmentedControl from "../../ui/SegmentedControl";
@@ -7,6 +7,9 @@ import LocationAutocomplete from "../../ui/LocationAutocomplete";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { Home, Building, BadgeDollarSign, BadgePercent } from "lucide-react";
+import { useDebounce } from "../../../hooks/useDebounce";
+import { useAuth } from "../../../context/AuthContext";
+import { searchBrokers, type BrokerOption } from "../../../services/brokerApi";
 
 interface FormProps {
   state: ListingState;
@@ -22,6 +25,46 @@ const CoreDetailsForm = ({
   onComplete,
   agents,
 }: FormProps) => {
+  const { token } = useAuth();
+
+  // Broker search state
+  const [brokerSearchQuery, setBrokerSearchQuery] = useState("");
+  const [brokerOptions, setBrokerOptions] = useState<SelectOption[]>([]);
+  const [isLoadingBrokers, setIsLoadingBrokers] = useState(false);
+  const [brokerSearchError, setBrokerSearchError] = useState<string | null>(null);
+
+  const debouncedBrokerSearch = useDebounce(brokerSearchQuery, 500);
+
+  // Fetch brokers when search query changes
+  useEffect(() => {
+    const fetchBrokers = async () => {
+      if (!token || debouncedBrokerSearch.length < 2) {
+        setBrokerOptions([]);
+        return;
+      }
+
+      setIsLoadingBrokers(true);
+      setBrokerSearchError(null);
+
+      try {
+        const response = await searchBrokers(debouncedBrokerSearch, 0, 20, token);
+        const options = response.content.map((broker: BrokerOption) => ({
+          value: broker.licenseNumber,
+          label: `${broker.name} — License: ${broker.licenseNumber}`
+        }));
+        setBrokerOptions(options);
+      } catch (error) {
+        console.error('Failed to search brokers:', error);
+        setBrokerSearchError('Failed to load brokers. Please try again.');
+        setBrokerOptions([]);
+      } finally {
+        setIsLoadingBrokers(false);
+      }
+    };
+
+    fetchBrokers();
+  }, [debouncedBrokerSearch, token]);
+
   const updateField = (
     field: keyof ListingState,
     value: string | SelectOption | null | Date | number | unknown
@@ -233,15 +276,23 @@ const CoreDetailsForm = ({
         <>
           <FormLabel text="Broker license" required>
             <CustomSelect
-              placeholder="12345678 REAL ESTATE — Brokerage Registration Numb..."
-              options={[
-                { value: "12345678", label: "12345678 REAL ESTATE — Brokerage Registration Number" },
-                { value: "87654321", label: "87654321 REAL ESTATE — Brokerage Registration Number" },
-                { value: "11223344", label: "11223344 REAL ESTATE — Brokerage Registration Number" },
-              ]}
-              value={state.reraPermitNumber ? { value: state.reraPermitNumber, label: state.reraPermitNumber + " REAL ESTATE — Brokerage Registration Number" } : null}
+              placeholder="Search by publisher name..."
+              options={brokerOptions}
+              value={state.reraPermitNumber ? brokerOptions.find(opt => opt.value === state.reraPermitNumber) || null : null}
               onChange={(val) => updateField("reraPermitNumber", val ? val.value as string : "")}
+              onInputChange={(query) => setBrokerSearchQuery(query)}
+              isLoading={isLoadingBrokers}
+              noOptionsMessage={() =>
+                brokerSearchQuery.length < 2
+                  ? "Type at least 2 characters to search"
+                  : isLoadingBrokers
+                    ? "Searching..."
+                    : "No brokers found"
+              }
             />
+            {brokerSearchError && (
+              <p className="text-sm text-red-600 mt-1">{brokerSearchError}</p>
+            )}
           </FormLabel>
           <FormLabel text="ADREC permit number" required>
             <div className="flex items-center gap-2">

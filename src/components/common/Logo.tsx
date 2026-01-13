@@ -1,0 +1,46 @@
+import React from 'react';
+
+interface LogoProps {
+  className?: string;
+  width?: number;
+  height?: number;
+}
+
+const Logo: React.FC<LogoProps> = ({ className, width = 40, height = 40 }) => {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 40 40"
+      width={width}
+      height={height}
+      style={{ display: 'block' }}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Outer Circle */}
+      <path
+        d="M20 40C31.0457 40 40 31.0457 40 20C40 8.9543 31.0457 0 20 0C8.9543 0 0 8.9543 0 20C0 31.0457 8.9543 40 20 40Z"
+        fill="rgba(58,48,127,1)"
+        fillRule="nonzero"
+      />
+      {/* Inner Content Group positioned at roughly left: 13px, top: 7.6px */}
+      <g transform="translate(13.025, 7.628)">
+        {/* Top white shape */}
+        <path
+          d="M8.18582 0C5.92395 0 3.8775 0.923504 2.39506 2.41523C0.963583 3.85719 0.0590658 5.8315 0 8.01875C2.13679 8.12406 4.06975 9.014 5.51976 10.4074C7.09832 11.9245 8.10475 14.0377 8.18351 16.3893C8.18351 16.4252 8.18351 16.4599 8.18351 16.4958L8.18582 16.4958C10.4465 16.4958 12.4918 15.5723 13.9731 14.0805C14.4781 13.5725 14.9158 12.9985 15.276 12.3724C15.6432 11.7348 15.9269 11.0415 16.1134 10.3101C16.2825 9.6505 16.3716 8.95961 16.3716 8.24789C16.3716 3.69286 12.7049 0 8.18235 0L8.18582 0Z"
+          fill="rgba(255,255,255,1)"
+          fillRule="nonzero"
+        />
+        {/* Bottom white shape, positioned at y=16.5 relative to the group */}
+        <path
+          d="M0 8.24789C4.52259 8.24789 8.18814 4.55503 8.18814 0L0 0L0 8.24789Z"
+          fill="rgba(255,255,255,1)"
+          fillRule="nonzero"
+          transform="translate(0, 16.5)"
+        />
+      </g>
+    </svg>
+  );
+};
+
+export default Logo;

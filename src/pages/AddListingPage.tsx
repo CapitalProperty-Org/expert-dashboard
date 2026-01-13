@@ -86,7 +86,7 @@ function listingReducer(state: ListingState, action: ListingAction): ListingStat
 }
 
 const AddListingPage = () => {
-  const { isLoading: isAuthLoading, token } = useAuth();
+  const { isLoading: isAuthLoading, token, user } = useAuth();
   const navigate = useNavigate();
   const [formData, dispatch] = useReducer(listingReducer, initialState);
   const { balance, refreshData: refreshCredits } = useCredits();
@@ -111,6 +111,17 @@ const AddListingPage = () => {
 
   const { id } = useParams();
   const isEditMode = !!id;
+
+  // Auto-assign agent if user is an agent
+  useEffect(() => {
+    if (user && (user.legacyRole === 'agent' || user.role === 'agent') && !formData.assignedAgent) {
+      dispatch({
+        type: 'UPDATE_FIELD',
+        field: 'assignedAgent',
+        value: { value: Number(user.id), label: `${user.firstName} ${user.lastName}` }
+      });
+    }
+  }, [user, formData.assignedAgent]);
 
   useEffect(() => {
     if (isAuthLoading || !token) return;
@@ -304,10 +315,24 @@ const AddListingPage = () => {
 
     setSaveStatus('saving');
 
+    // Determined assigned_to ID safely
+    const assignedId = data.assignedAgent
+      ? (data.assignedAgent as SelectOption).value
+      : (user && (user.legacyRole === 'agent' || user.role === 'agent')) ? Number(user.id) : null;
+
+    if (!assignedId && !isEditMode) {
+      // If no agent assigned and not edit mode (where it might exist on backend), we might have an issue.
+      // But let's proceed, backend might error or handle it.
+      // Actually, let's error on client side if critical. 
+      // Drafts might not need it? But FK constraint says yes.
+      // If we are admin, we must select. If agent, we autofilled.
+      console.warn("No agent assigned for draft save");
+    }
+
     // Construct payload (Similar to saveAsDraft)
     const listingData = {
       reference: data.reference,
-      assigned_to: data.assignedAgent ? { id: (data.assignedAgent as SelectOption).value } : { id: 274026 },
+      assigned_to: assignedId ? { id: assignedId } : undefined,
       state: { stage: 'draft', type: 'pending_publishing' },
       uae_emirate: data.uae_emirate || '',
       city: data.uae_emirate === 'northern_emirates' ? (data.city || null) : null,
@@ -428,11 +453,22 @@ const AddListingPage = () => {
     setError(null);
     setShowSuccess(false);
 
+    // Determined assigned_to ID safely
+    const assignedId = formData.assignedAgent
+      ? (formData.assignedAgent as SelectOption).value
+      : (user && (user.legacyRole === 'agent' || user.role === 'agent')) ? Number(user.id) : null;
+
+    if (!assignedId) {
+      setError("Please assign an agent to this listing.");
+      setIsSubmitting(false);
+      return;
+    }
+
     // 1. Prepare Listing Data (Save as Draft first)
     // We intentionally do NOT set state to 'live' here. We let the publish endpoint handle that.
     const listingData = {
       reference: formData.reference,
-      assigned_to: formData.assignedAgent ? { id: (formData.assignedAgent as SelectOption).value } : { id: 274026 },
+      assigned_to: { id: assignedId },
       // Update: Keep as draft during save
       state: { stage: 'draft', type: 'pending_publishing' },
       available_from: formData.available === 'immediately'
@@ -560,25 +596,19 @@ const AddListingPage = () => {
 
   const saveAsDraft = async () => {
     if (!token) return;
-    // Removed strict reference check here as it should be auto-generated or we can generate one now
-    // If no reference, we can't save? Actually we can try to generate one or let backend handle?
-    // But since we fetch it on mount, it should be there.
-    // If it's missing for some reason, we could error or try to continue.
-    // For now, let's allow it but warn if missing?
 
-    // Actually, fallback if reference is missing:
-    let referenceToUse = formData.reference;
-    if (!referenceToUse) {
-      // Ideally fetch one, but for now relying on mount or user input.
-      // If empty, backend might fail or we generate a temp one? 
-      // We'll rely on the mount-generated reference.
-    }
+    // Filter fallback for reference if missing (though unlikely due to mount fetch)
+    // let referenceToUse = formData.reference;
 
     setIsSavingDraft(true);
 
+    const assignedId = formData.assignedAgent
+      ? (formData.assignedAgent as SelectOption).value
+      : (user && (user.legacyRole === 'agent' || user.role === 'agent')) ? Number(user.id) : null;
+
     const listingData = {
       reference: formData.reference,
-      assigned_to: formData.assignedAgent ? { id: (formData.assignedAgent as SelectOption).value } : { id: 274026 },
+      assigned_to: assignedId ? { id: assignedId } : undefined,
       state: { stage: 'draft', type: 'pending_publishing' },
       uae_emirate: formData.uae_emirate || '',
       city: formData.uae_emirate === 'northern_emirates' ? (formData.city || null) : null,

@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import SidebarContent from './SidebarContent';
+import SidebarLogo from '../common/SidebarLogo';
 import { cn } from '../../lib/utils';
 
 interface MobileSidebarProps {
@@ -26,7 +27,9 @@ const MobileSidebar = ({ isOpen, onClose }: MobileSidebarProps) => {
         )}
       >
         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <div className="text-2xl font-bold text-gray-800">expert</div>
+          <div className="flex items-center">
+            <SidebarLogo />
+          </div>
           <button onClick={onClose} className="p-2 -mr-2 rounded-full hover:bg-gray-100">
             <X size={24} className="text-gray-600" />
           </button>
