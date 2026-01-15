@@ -10,11 +10,12 @@ interface AddListingHeaderProps {
     isSubmitting: boolean;
     saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
     lastSaved?: Date | null;
+    isValid?: boolean;
 }
 
-const AddListingHeader = ({ qualityScore, onPublish, onExit, isSubmitting, saveStatus = 'idle', lastSaved = null }: AddListingHeaderProps) => {
+const AddListingHeader = ({ qualityScore, onPublish, onExit, isSubmitting, saveStatus = 'idle', lastSaved = null, isValid = true }: AddListingHeaderProps) => {
     const navigate = useNavigate();
-    const canPublish = qualityScore >= 60;
+    const canPublish = isValid; // Only depend on isValid (which includes required fields). Quality score is informational.
 
     return (
         <header className="bg-white border-b border-gray-200 p-4 sticky top-0 z-30 flex items-center justify-between">

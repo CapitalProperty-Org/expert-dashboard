@@ -7,9 +7,6 @@ import LocationAutocomplete from "../../ui/LocationAutocomplete";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { Home, Building, BadgeDollarSign, BadgePercent } from "lucide-react";
-import { useDebounce } from "../../../hooks/useDebounce";
-import { useAuth } from "../../../context/AuthContext";
-import { searchBrokers, type BrokerOption } from "../../../services/brokerApi";
 
 interface FormProps {
   state: ListingState;
@@ -25,45 +22,8 @@ const CoreDetailsForm = ({
   onComplete,
   agents,
 }: FormProps) => {
-  const { token } = useAuth();
 
-  // Broker search state
-  const [brokerSearchQuery, setBrokerSearchQuery] = useState("");
-  const [brokerOptions, setBrokerOptions] = useState<SelectOption[]>([]);
-  const [isLoadingBrokers, setIsLoadingBrokers] = useState(false);
-  const [brokerSearchError, setBrokerSearchError] = useState<string | null>(null);
 
-  const debouncedBrokerSearch = useDebounce(brokerSearchQuery, 500);
-
-  // Fetch brokers when search query changes
-  useEffect(() => {
-    const fetchBrokers = async () => {
-      if (!token || debouncedBrokerSearch.length < 2) {
-        setBrokerOptions([]);
-        return;
-      }
-
-      setIsLoadingBrokers(true);
-      setBrokerSearchError(null);
-
-      try {
-        const response = await searchBrokers(debouncedBrokerSearch, 0, 20, token);
-        const options = response.content.map((broker: BrokerOption) => ({
-          value: broker.licenseNumber,
-          label: `${broker.name} — License: ${broker.licenseNumber}`
-        }));
-        setBrokerOptions(options);
-      } catch (error) {
-        console.error('Failed to search brokers:', error);
-        setBrokerSearchError('Failed to load brokers. Please try again.');
-        setBrokerOptions([]);
-      } finally {
-        setIsLoadingBrokers(false);
-      }
-    };
-
-    fetchBrokers();
-  }, [debouncedBrokerSearch, token]);
 
   const updateField = (
     field: keyof ListingState,
@@ -275,24 +235,14 @@ const CoreDetailsForm = ({
       {((state.uae_emirate === "abu_dhabi") || (state.uae_emirate === "northern_emirates" && state.city === "al_ain")) && (
         <>
           <FormLabel text="Broker license" required>
-            <CustomSelect
-              placeholder="Search by publisher name..."
-              options={brokerOptions}
-              value={state.reraPermitNumber ? brokerOptions.find(opt => opt.value === state.reraPermitNumber) || null : null}
-              onChange={(val) => updateField("reraPermitNumber", val ? val.value as string : "")}
-              onInputChange={(query) => setBrokerSearchQuery(query)}
-              isLoading={isLoadingBrokers}
-              noOptionsMessage={() =>
-                brokerSearchQuery.length < 2
-                  ? "Type at least 2 characters to search"
-                  : isLoadingBrokers
-                    ? "Searching..."
-                    : "No brokers found"
-              }
+            <input
+              type="text"
+              placeholder="Enter license number"
+              className="w-full p-2.5 border rounded-lg bg-white text-gray-900"
+              value={state.reraPermitNumber || ""}
+              onChange={(e) => updateField("reraPermitNumber", e.target.value)}
             />
-            {brokerSearchError && (
-              <p className="text-sm text-red-600 mt-1">{brokerSearchError}</p>
-            )}
+            {/* Error display removed */}
           </FormLabel>
           <FormLabel text="ADREC permit number" required>
             <div className="flex items-center gap-2">

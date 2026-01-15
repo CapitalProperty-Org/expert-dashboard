@@ -13,7 +13,7 @@ interface ListingSidebarProps {
 }
 
 const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const [activeTab, setActiveTab] = useState('overview');
     const [listing, setListing] = useState<Listing | null>(null);
     const [loading, setLoading] = useState(false);
@@ -27,6 +27,17 @@ const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
     const [notesLoading, setNotesLoading] = useState(false);
     const [notesError, setNotesError] = useState<string | null>(null);
     const MAX_NOTE_CHARS = 1000;
+
+    const canEdit = React.useMemo(() => {
+        if (!user || !listing) return false;
+        if (user.role === 'admin' || user.role === 'decision_maker') return true;
+
+        const userId = Number(user.id);
+        const assignedId = Number(listing.assigned_to?.id);
+        const createdId = Number(listing.created_by?.id);
+
+        return userId === assignedId || userId === createdId;
+    }, [user, listing]);
 
     const fetchNotes = async () => {
         if (!listingId || !token) return;
@@ -147,12 +158,7 @@ const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
                         >
                             Notes
                         </button>
-                        <button
-                            disabled
-                            className="px-6 py-3 text-sm font-semibold text-gray-300 cursor-not-allowed"
-                        >
-                            History
-                        </button>
+
                     </div>
 
                     {/* Content */}
@@ -169,7 +175,27 @@ const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
                             <div className="space-y-6">
                                 {activeTab === 'overview' && (
                                     <div className="grid grid-cols-1 gap-6">
-                                        <div className="space-y-4">
+                                        {/* Performance Metrics */}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="bg-gray-50 p-4 rounded-lg">
+                                                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider block mb-1">Impressions</span>
+                                                <span className="text-xl font-bold text-gray-900">{listing.impressions || 0}</span>
+                                            </div>
+                                            <div className="bg-gray-50 p-4 rounded-lg">
+                                                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider block mb-1">Clicks</span>
+                                                <span className="text-xl font-bold text-gray-900">{listing.clicks || 0}</span>
+                                            </div>
+                                            <div className="bg-gray-50 p-4 rounded-lg">
+                                                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider block mb-1">CTR</span>
+                                                <span className="text-xl font-bold text-gray-900">{listing.ctr || 0}%</span>
+                                            </div>
+                                            <div className="bg-gray-50 p-4 rounded-lg">
+                                                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider block mb-1">Leads</span>
+                                                <span className="text-xl font-bold text-gray-900">{listing.leads_received || 0}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="border-t pt-6 space-y-4">
                                             <DetailRow
                                                 label="Assigned to"
                                                 value={listing.assigned_to?.name || 'Unassigned'}
@@ -291,8 +317,13 @@ const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
                     {listing && (
                         <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t flex justify-end">
                             <button
-                                onClick={() => window.open(`/listings/edit/${listing.id}`, '_blank')}
-                                className="w-full px-6 py-2.5 bg-white border border-violet-600 text-violet-600 font-bold rounded-lg hover:bg-violet-50 transition-colors"
+                                onClick={() => canEdit && window.open(`/listings/edit/${listing.id}`, '_blank')}
+                                disabled={!canEdit}
+                                title={!canEdit ? "You are not authorized to edit this listing" : "Edit Listing"}
+                                className={`w-full px-6 py-2.5 border font-bold rounded-lg transition-colors ${canEdit
+                                    ? "bg-white border-violet-600 text-violet-600 hover:bg-violet-50"
+                                    : "bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed"
+                                    }`}
                             >
                                 Edit
                             </button>

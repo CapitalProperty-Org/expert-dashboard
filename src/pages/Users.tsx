@@ -7,8 +7,9 @@ import UsersTable from '../components/dashboard/users/UsersTable';
 import { useDebounce } from '../hooks/useDebounce';
 import UserCard from '../components/dashboard/users/UserCard';
 import { useAuth } from '../context/AuthContext';
-import LoadingSpinner from '../components/ui/LoadingSpinner'; // <-- استيراد
-import NoResultsFound from '../components/ui/NoResultsFound'; // <-- استيراد
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import NoResultsFound from '../components/ui/NoResultsFound';
+import AccessDenied from '../components/ui/AccessDenied';
 
 export interface Role {
     id: number;
@@ -165,7 +166,7 @@ const Users = () => {
             return <LoadingSpinner />;
         }
         if (error) {
-            return <div className="flex-grow flex items-center justify-center text-red-600">{error}</div>;
+            return <AccessDenied message={error} />;
         }
         if (users.length === 0) {
             return <NoResultsFound />;

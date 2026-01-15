@@ -14,6 +14,8 @@ import AccordionSection from '../components/dashboard/add-listing/AccordionSecti
 import { useDebounce } from '../hooks/useDebounce';
 import SuccessToast from '../components/ui/SuccessToast';
 import ErrorToast from '../components/ui/ErrorToast';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import AccessDenied from '../components/ui/AccessDenied';
 import ConfirmModal from '../components/ui/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../context/CreditsContext';
@@ -95,6 +97,7 @@ const AddListingPage = () => {
   const [qualityScore, setQualityScore] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
@@ -210,7 +213,8 @@ const AddListingPage = () => {
         const agentsRes = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/users?role=3`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        setAgents(agentsRes.data.map((u: { id: number; first_name: string; last_name: string }) => ({ value: u.id, label: `${u.first_name} ${u.last_name}` })));
+        const agentsData = agentsRes.data.data || [];
+        setAgents(agentsData.map((u: { id: number; first_name: string; last_name: string }) => ({ value: u.id, label: `${u.first_name} ${u.last_name}` })));
       } catch (error) {
         console.error("Failed to fetch lookups", error);
       }
@@ -720,6 +724,68 @@ const AddListingPage = () => {
     }
   };
 
+  // Check for unauthorized access
+  useEffect(() => {
+    // 1. Unauthenticated User Check
+    if (!isAuthLoading && !token) {
+      navigate('/login');
+      return;
+    }
+
+    // 2. Listing Ownership Check
+    if (!id || !user || !formData.assignedAgent) return;
+
+    // Only check if we have fully loaded the listing data (assignedAgent is populated)
+    // and the user is not an admin/decision_maker
+    if (user.role !== 'admin' && user.role !== 'decision_maker') {
+      const assignedId = (formData.assignedAgent as SelectOption).value;
+      if (Number(user.id) !== Number(assignedId)) {
+        // Instead of redirecting to login, we show the Access Denied UI
+        setIsUnauthorized(true);
+      }
+    }
+  }, [id, user, formData.assignedAgent, isAuthLoading, token]);
+
+  if (isUnauthorized) {
+    return <AccessDenied message="You do not have permission to edit this listing. Only the assigned agent or an administrator can make changes." />;
+  }
+
+  const isFormValid = React.useMemo(() => {
+    // Core Details
+    if (!formData.uae_emirate) return false;
+    if (formData.uae_emirate === 'dubai' && !formData.permitType) return false;
+    // if (formData.permitType === 'rera' && !formData.reraPermitNumber) return false; // Optional per requirements? "required field that flaged with red start"
+    // Form says RERA permit number is required if RERA selected.
+    if (formData.permitType === 'rera' && !formData.reraPermitNumber) return false;
+    if (formData.permitType === 'dtcm' && !formData.dtcmPermitNumber) return false;
+
+    if (formData.uae_emirate === 'northern_emirates' && !formData.city) return false;
+
+    // Offering
+    if (!formData.offeringType) return false;
+    if (formData.offeringType === 'rent' && !formData.rentalPeriod) return false;
+    if (!formData.propertyType) return false;
+    if (!formData.propertyLocation) return false; // Location is required
+    if (!formData.assignedAgent) return false;
+
+    // Price
+    if (!formData.price || Number(formData.price) <= 0) return false;
+
+    // Specs - Basic requirements, might vary by property type but let's enforce common ones if flagged
+    // FormLabel text="Size (sqft)" required
+    if (!formData.size || Number(formData.size) <= 0) return false;
+
+    // Bedrooms/Bathrooms - usually required for residential
+    // If propertyType has bedrooms field visible? Form logic:
+    // {["apartment", "villa", "townhouse", "penthouse", "duplex", "hotel_apartment", ...].includes(state.propertyType) -> shows bedrooms
+    // We can loosely check: if values are empty strings, they are invalid IF the field is relevant. 
+    // But simplistic check: Size is safe. 
+    // Title is required? FormLabel text="Title (English)" required
+    if (!formData.title || formData.title.trim().length === 0) return false;
+
+    return true;
+  }, [formData]);
+
   return (
     <>
       <SuccessToast message="Listing created successfully!" show={showSuccess} onClose={() => setShowSuccess(false)} />
@@ -738,6 +804,7 @@ const AddListingPage = () => {
           isSubmitting={isSubmitting}
           saveStatus={saveStatus}
           lastSaved={lastSaved}
+          isValid={isFormValid}
         />
         <div className="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-8 p-4 sm:p-6 lg:p-8">
           <div className="space-y-4">

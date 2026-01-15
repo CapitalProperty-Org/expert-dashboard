@@ -75,6 +75,7 @@ interface ListingsContextType {
     rejectListing: (id: string) => Promise<void>;
     reassignListing: (id: string, payload: { new_assigned_to: string }) => Promise<void>;
     publishListing: (id: string) => Promise<void>;
+    unpublishListing: (id: string) => Promise<void>;
     archiveListing: (id: string) => Promise<void>;
     unarchiveListing: (id: string) => Promise<void>;
     deleteListing: (id: string) => Promise<void>;
@@ -179,6 +180,15 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
         }
     }, []);
 
+    const unpublishListing = useCallback(async (id: string) => {
+        try {
+            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/unpublish`);
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to unpublish listing.";
+            throw new Error(errorMessage);
+        }
+    }, []);
+
     const archiveListing = useCallback(async (id: string) => {
         try {
             await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/archive`);
@@ -227,6 +237,7 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
             rejectListing,
             reassignListing,
             publishListing,
+            unpublishListing,
             archiveListing,
             unarchiveListing,
             deleteListing

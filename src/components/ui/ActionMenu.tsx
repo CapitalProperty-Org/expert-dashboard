@@ -10,6 +10,7 @@ import ErrorToast from './ErrorToast';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/themes/light.css';
+import { useAuth } from '../../context/AuthContext';
 
 interface ListingData {
     id: string;
@@ -40,6 +41,8 @@ interface ListingData {
         en?: string;
     };
     images?: string[];
+    assigned_to?: { id?: string | number };
+    created_by?: { id?: string | number };
 }
 
 interface ActionMenuProps {
@@ -51,12 +54,24 @@ interface ActionMenuProps {
 const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProps) => {
     const { openModal, ConfirmationModalComponent } = useConfirmationModal();
     const { archiveListing, publishListing, deleteListing, unpublishListing } = useListings();
+    const { user } = useAuth();
     const [showSuccessToast, setShowSuccessToast] = useState(false);
     const [showErrorToast, setShowErrorToast] = useState(false);
     const [message, setMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const [visible, setVisible] = useState(false); // Tippy visibility state
+
+    const canEdit = React.useMemo(() => {
+        if (!user || !listingData) return false;
+        if (user.role === 'admin' || user.role === 'decision_maker') return true; // Admin override
+
+        const userId = Number(user.id);
+        const assignedId = Number(listingData.assigned_to?.id);
+        const createdId = Number(listingData.created_by?.id);
+
+        return userId === assignedId || userId === createdId;
+    }, [user, listingData]);
 
     // PDF Generation Logic (Kept mostly as is, just function extracted if needed, but keeping inline for simplicity)
     const generatePDF = async () => {
@@ -372,7 +387,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
     const menuContent = (
         <div className="w-48 bg-white rounded-md shadow-sm">
             <div className="py-1">
-                {listingData?.state?.type === 'draft' && (
+                {canEdit && listingData?.state?.type === 'draft' && (
                     <button
                         onClick={() => handleAction('publish')}
                         disabled={isLoading}
@@ -382,7 +397,7 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                         {getActionLabel('publish')}
                     </button>
                 )}
-                {listingData?.state?.stage === 'live' && (
+                {canEdit && listingData?.state?.stage === 'live' && (
                     <button
                         onClick={() => handleAction('unpublish')}
                         disabled={isLoading}
@@ -401,23 +416,27 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                     {getActionLabel('createPdf')}
                 </button>
 
-                <button
-                    onClick={() => confirmAction('delete')}
-                    disabled={isLoading}
-                    className={`w-full text-left flex items-center gap-2 px-4 py-2 text-sm ${getActionColor('delete')} disabled:opacity-50`}
-                >
-                    {getActionIcon('delete')}
-                    {getActionLabel('delete')}
-                </button>
+                {canEdit && (
+                    <>
+                        <button
+                            onClick={() => confirmAction('delete')}
+                            disabled={isLoading}
+                            className={`w-full text-left flex items-center gap-2 px-4 py-2 text-sm ${getActionColor('delete')} disabled:opacity-50`}
+                        >
+                            {getActionIcon('delete')}
+                            {getActionLabel('delete')}
+                        </button>
 
-                <button
-                    onClick={() => confirmAction('archive')}
-                    disabled={isLoading}
-                    className={`w-full text-left flex items-center gap-2 px-4 py-2 text-sm ${getActionColor('archive')} disabled:opacity-50`}
-                >
-                    {getActionIcon('archive')}
-                    {getActionLabel('archive')}
-                </button>
+                        <button
+                            onClick={() => confirmAction('archive')}
+                            disabled={isLoading}
+                            className={`w-full text-left flex items-center gap-2 px-4 py-2 text-sm ${getActionColor('archive')} disabled:opacity-50`}
+                        >
+                            {getActionIcon('archive')}
+                            {getActionLabel('archive')}
+                        </button>
+                    </>
+                )}
             </div>
         </div>
     );

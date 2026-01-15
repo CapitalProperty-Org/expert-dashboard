@@ -124,7 +124,7 @@ const ListingInsights: React.FC<ListingInsightsProps> = ({ qualityScore }) => {
     });
 
     return (
-        <div className="bg-white rounded-lg border shadow-sm overflow-hidden transition-all duration-300">
+        <div className="bg-white rounded-lg border shadow-sm transition-all duration-300">
             {/* Header - Collapsible Trigger */}
             <div
                 className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"

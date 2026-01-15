@@ -18,6 +18,7 @@ import ApproveModal from '../components/dashboard/ApproveModal';
 import ReassignModal from '../components/dashboard/ReassignModal';
 import RejectModal from '../components/dashboard/RejectModal';
 import ListingSidebar from '../components/dashboard/ListingSidebar';
+import Pagination from '../components/ui/Pagination';
 import type { Listing } from '../context/ListingsContext';
 
 // New interface for publish payload
@@ -87,7 +88,9 @@ const ListingsManagement = () => {
         used_credits: number;
     } | null>(null);
 
-    const applyFiltersAndFetch = useCallback(() => {
+
+
+    const applyFiltersAndFetch = useCallback((page = 1) => {
         const activeFilters: Record<string, string | boolean> = { ...filters, search: debouncedSearch };
         Object.keys(activeFilters).forEach(key => {
             const filterKey = key as keyof typeof activeFilters;
@@ -102,12 +105,22 @@ const ListingsManagement = () => {
         });
 
         const sortToSend = sort.sortBy === 'price' ? null : sort;
-        fetchListings({ filters: activeFilters, sort: sortToSend });
+        // Pass page number if provided, otherwise use current pagination page or default 1 inside fetchListings logic via filters or separate logic
+        // But here we need to pass it explicitly to fetchListings
+        fetchListings({ filters: activeFilters, sort: sortToSend, page: page || 1 });
     }, [filters, debouncedSearch, sort, fetchListings]);
 
     useEffect(() => {
-        applyFiltersAndFetch();
-    }, [applyFiltersAndFetch]);
+        applyFiltersAndFetch(1); // Reset to page 1 when filters change
+    }, [filters, debouncedSearch, sort, fetchListings]); // Removed applyFiltersAndFetch from dependency to avoid infinite loop if we memoize it differently, but here it's fine.
+    // Actually, to implement page change without resetting, we need to distinguish between filter change and page change.
+    // But simplified version: useEffect always resets to 1. Page change calls applyFiltersAndFetch(newPage) directly.
+
+    // We need to modify useEffect to NOT run on mount if we want full control, or standard pattern:
+    // useEffect(() => { applyFiltersAndFetch(1); }, [filters, debouncedSearch, sort]);
+
+    // Changing applyFiltersAndFetch to take optional page argument
+
 
     const handleApplyModalFilters = (newFiltersFromModal: typeof initialFilters) => {
         setFilters(newFiltersFromModal);
@@ -140,12 +153,16 @@ const ListingsManagement = () => {
         }
     };
 
+    const handlePageChange = (newPage: number) => {
+        applyFiltersAndFetch(newPage);
+    };
+
     const handleActionComplete = () => {
         applyFiltersAndFetch();
     };
 
     const handleBulkAction = async (
-        action: 'publish' | 'archive' | 'unarchive' | 'reject' | 'reassign' | 'approve',
+        action: 'publish' | 'archive' | 'unarchive' | 'reject' | 'reassign' | 'approve' | 'delete',
         data?: Record<string, unknown>
     ) => {
         const promises = Array.from(selectedIds).map(id => {
@@ -161,6 +178,9 @@ const ListingsManagement = () => {
                     break;
                 case 'unarchive':
                     endpoint = `${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/unarchive`;
+                    break;
+                case 'delete':
+                    endpoint = `${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}`;
                     break;
                 case 'approve':
                     endpoint = `${import.meta.env.VITE_BASE_URL}/api/listings/listings/approve`;
@@ -183,6 +203,8 @@ const ListingsManagement = () => {
 
             if (action === 'approve' || action === 'reject' || action === 'reassign') {
                 return axios.post(endpoint, payload);
+            } else if (action === 'delete') {
+                return axios.delete(endpoint);
             } else {
                 return axios.post(endpoint);
             }
@@ -325,13 +347,13 @@ const ListingsManagement = () => {
         setIsSelectionMode(false);
     };
 
-    const confirmAction = (action: 'archive' | 'unarchive') => {
+    const confirmAction = (action: 'archive' | 'unarchive' | 'delete') => {
         const actionText = action.charAt(0).toUpperCase() + action.slice(1);
         openModal({
             title: `${actionText} Listings`,
             description: `Are you sure you want to ${action} ${selectedIds.size} selected listing(s)?`,
             confirmText: actionText,
-            isDestructive: action === 'archive',
+            isDestructive: action === 'archive' || action === 'delete',
             onConfirm: () => handleBulkAction(action),
         });
     };
@@ -541,6 +563,16 @@ const ListingsManagement = () => {
 
                 <div className="px-4 sm:px-6 md:px-8 flex-grow overflow-y-auto pb-28 lg:pb-4">
                     {renderContent()}
+
+                    {!loading && !error && listings.length > 0 && pagination && (
+                        <Pagination
+                            currentPage={pagination.page_number}
+                            totalPages={Math.ceil(pagination.total / pagination.page_size)}
+                            onPageChange={handlePageChange}
+                            totalItems={pagination.total}
+                            itemsPerPage={pagination.page_size}
+                        />
+                    )}
                 </div>
 
                 {selectedIds.size > 0 && (
@@ -554,6 +586,7 @@ const ListingsManagement = () => {
                         onReject={() => setIsRejectModalOpen(true)}
                         onReassignClick={() => setIsReassignModalOpen(true)}
                         onApprove={() => setIsApproveModalOpen(true)}
+                        onDelete={() => confirmAction('delete')}
                     />
                 )}
 
