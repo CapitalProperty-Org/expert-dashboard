@@ -77,8 +77,11 @@ const SpecificationsForm = ({ state, dispatch, onComplete }: FormProps) => {
         />
       </FormLabel>
       <FormLabel text="Project status" required><CustomSelect placeholder="Select an option" options={[
-        { value: 'resale-ready', label: 'Resale - Ready to move' },
-        { value: 'resale-off-plan', label: 'Resale - Off-plan' }
+         { value: "resale - Ready to move", label: "Resale - Ready to move" },
+    { value: "Primary - Ready to move", label: "Primary - Ready to move" },
+    { value: "Resale - Off plan", label: "Resale - Off plan" },
+    { value: "Primary - Off plan", label: "Primary - Off plan" },
+ 
       ]} value={state.projectStatus ? { value: state.projectStatus, label: state.projectStatus === 'resale-ready' ? 'Resale - Ready to move' : 'Resale - Off-plan' } : null} onChange={(val) => updateField('projectStatus', val ? val.value as string : '')} /></FormLabel>
       <FormLabel text="Owner Name"><input type="text" className="w-full p-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:border-violet-500 focus:ring-1 focus:ring-violet-500" value={state.ownerName} onChange={e => updateField('ownerName', e.target.value)} /></FormLabel>
     </div>

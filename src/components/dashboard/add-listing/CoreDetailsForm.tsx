@@ -190,7 +190,10 @@ const CoreDetailsForm = ({
                     updateField("reraPermitNumber", e.target.value)
                   }
                 />
-                <button className="bg-white border border-violet-600 text-violet-700 font-semibold py-2.5 px-4 rounded-lg hover:bg-violet-50 transition">
+                <button
+                  type="button"
+                  className="bg-white border border-violet-600 text-violet-700 font-semibold py-2.5 px-4 rounded-lg hover:bg-violet-50 transition"
+                >
                   Validate
                 </button>
               </div>
@@ -253,7 +256,10 @@ const CoreDetailsForm = ({
                 onChange={(e) => updateField("dtcmPermitNumber", e.target.value)}
                 placeholder="2025790001271114"
               />
-              <button className="bg-white border border-violet-600 text-violet-700 font-semibold py-2.5 px-4 rounded-lg hover:bg-violet-50 transition whitespace-nowrap">
+              <button
+                type="button"
+                className="bg-white border border-violet-600 text-violet-700 font-semibold py-2.5 px-4 rounded-lg hover:bg-violet-50 transition whitespace-nowrap"
+              >
                 Validate
               </button>
             </div>

@@ -39,7 +39,7 @@ const CustomSelect = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const selectedOption = value
-    ? options.find(opt => opt.value === value.value)
+    ? options.find(opt => opt.value === (value && typeof value === 'object' && 'value' in value ? value.value : value))
     : null;
   const ref = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -99,7 +99,7 @@ const CustomSelect = ({
   const filteredOptions = onInputChange
     ? options // When using external search (onInputChange), don't filter locally
     : options.filter(opt =>
-      opt.label.toLowerCase().includes(searchQuery.toLowerCase())
+      opt && opt.label && typeof opt.label === 'string' && opt.label.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
   return (

@@ -173,7 +173,10 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
 
     const publishListing = useCallback(async (id: string) => {
         try {
-            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/publish`);
+            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/publish`, {
+                all: false,
+                listing_ids: [id]
+            });
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : "Failed to publish listing.";
             throw new Error(errorMessage);
@@ -182,7 +185,10 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
 
     const unpublishListing = useCallback(async (id: string) => {
         try {
-            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/unpublish`);
+            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/unpublish`, {
+                all: false,
+                listing_ids: [id]
+            });
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : "Failed to unpublish listing.";
             throw new Error(errorMessage);
@@ -191,7 +197,10 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
 
     const archiveListing = useCallback(async (id: string) => {
         try {
-            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/archive`);
+            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/archive`, {
+                all: false,
+                listing_ids: [id]
+            });
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : "Failed to archive listing.";
             throw new Error(errorMessage);
@@ -200,7 +209,10 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
 
     const unarchiveListing = useCallback(async (id: string) => {
         try {
-            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/unarchive`);
+            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/unarchive`, {
+                all: false,
+                listing_ids: [id]
+            });
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : "Failed to unarchive listing.";
             throw new Error(errorMessage);
