@@ -32,7 +32,7 @@ const UserCard = ({ user, refreshUsers }: UserCardProps) => {
             <div className="border-t pt-3 space-y-2">
                 <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Role</span>
-                    <span className="font-medium text-gray-800">{user.role.name}</span>
+                    <span className="font-medium text-gray-800">{user.role?.name || 'N/A'}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Status</span>
@@ -42,8 +42,8 @@ const UserCard = ({ user, refreshUsers }: UserCardProps) => {
                 </div>
                 <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Verification</span>
-                    <span className={`capitalize font-medium ${user.agent.verification?.status === 'incomplete' ? 'text-yellow-600' : 'text-green-600'}`}>
-                        {user.agent.verification?.status}
+                    <span className={`capitalize font-medium ${user.agent?.verification?.status === 'incomplete' ? 'text-yellow-600' : 'text-green-600'}`}>
+                        {user.agent?.verification?.status || 'N/A'}
                     </span>
                 </div>
             </div>

@@ -85,9 +85,13 @@ const Users = () => {
                     return indexA - indexB;
                 });
 
-                setUsers(usersResponse.data);
+                // Handle both array response and paginated response format
+                const usersData = Array.isArray(usersResponse.data)
+                    ? usersResponse.data
+                    : (usersResponse.data.data || []);
+
+                setUsers(usersData);
                 setRoles(sortedRoles);
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (err: any) {
                 if (err.response?.status === 401) {
                     setError('Authorization failed. Please try logging in again.');
@@ -123,7 +127,12 @@ const Users = () => {
                 if (selectedStatus) params.append('status', selectedStatus.value.toString());
                 console.log("params", params)
                 const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/users?${params.toString()}`);
-                setUsers(response.data);
+
+                // Handle both array response and paginated response format
+                const usersData = Array.isArray(response.data)
+                    ? response.data
+                    : (response.data.data || []);
+                setUsers(usersData);
             } catch (err) {
                 setError('Failed to fetch users. Please try again.');
                 console.error(err);
@@ -143,8 +152,12 @@ const Users = () => {
             if (selectedRole) params.append('role', selectedRole.value.toString());
             if (selectedStatus) params.append('status', selectedStatus.value.toString());
             const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/users?${params.toString()}`);
-            setUsers(response.data);
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
+            // Handle both array response and paginated response format
+            const usersData = Array.isArray(response.data)
+                ? response.data
+                : (response.data.data || []);
+            setUsers(usersData);
         } catch (error) {
             setError('Could not refresh users.');
         } finally {
