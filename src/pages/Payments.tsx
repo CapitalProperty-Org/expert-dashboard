@@ -7,17 +7,21 @@ import { usePayments, PaymentsProvider } from '../context/PaymentsContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useDebounce } from '../hooks/useDebounce';
 
+import { useAuth } from '../context/AuthContext';
+
 const PaymentsComponent = () => {
+    const { user } = useAuth();
     const { unpaidInvoices, paidInvoices, loading, error, fetchInvoices } = usePayments();
     const [activeTab, setActiveTab] = useState<'unpaid' | 'paid'>('unpaid');
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 500);
 
     useEffect(() => {
-        // افترض أن رقم الحساب ثابت، يمكنك جلبه من AuthContext إذا لزم الأمر
-        fetchInvoices('166036', debouncedSearch);
-    }, [debouncedSearch, fetchInvoices]);
-    
+        if (user?.sfAccountNumber) {
+            fetchInvoices(user.sfAccountNumber, debouncedSearch);
+        }
+    }, [debouncedSearch, fetchInvoices, user?.sfAccountNumber]);
+
     const invoicesToShow = activeTab === 'unpaid' ? unpaidInvoices : paidInvoices;
 
     const renderContent = () => {
@@ -37,12 +41,12 @@ const PaymentsComponent = () => {
                         <Link to="/request-statement"><button className="w-full lg:w-auto bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-md flex items-center justify-center gap-2 text-sm"><FileText size={16} /> Request statement</button></Link>
                     </div>
                 </div>
-                
+
                 <div className="relative w-full lg:max-w-xs">
                     <input type="text" placeholder="Search by contract number" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full bg-white pl-4 pr-10 py-2.5 border rounded-lg text-sm" />
                     <button className="absolute inset-y-0 right-0 flex items-center justify-center w-12 border-l bg-gray-50 rounded-r-lg hover:bg-gray-100"><Search size={18} className="text-gray-500" /></button>
                 </div>
-                
+
                 <div className="border-b border-gray-200">
                     <nav className="-mb-px flex space-x-6" aria-label="Tabs">
                         <button onClick={() => setActiveTab('unpaid')} className={cn("whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm", activeTab === 'unpaid' ? "border-violet-500 text-violet-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")}>

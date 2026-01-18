@@ -2,6 +2,7 @@ import React, { useState, useCallback, createContext, useContext } from 'react';
 import axios from 'axios';
 
 // تعريف الواجهات - محدثة لتتوافق مع الـ backend
+// تعريف الواجهات - محدثة لتتوافق مع الـ backend
 export interface OverviewStats {
     number_of_days: number;
     leads: number;
@@ -33,7 +34,19 @@ export interface OverviewStats {
     lpl_premium: number;
     lpl_standard: number;
     ctr: number;
-    [key: string]: number; // للسماح بالوصول الديناميكي
+
+    // New Fields for Market Benchmarks
+    verified_listings_count?: number;
+    super_agent_listings_count?: number;
+    market_benchmarks?: {
+        qualityScore: { top5: number; great: number };
+        verified: { top5: number; great: number };
+        superAgent: { top5: number; great: number };
+        exposure: { top5: number; great: number };
+        lpl: { top5: number; great: number };
+    };
+
+    [key: string]: any; // للسماح بالوصول الديناميكي
 }
 
 interface PerformanceContextType {
@@ -69,8 +82,8 @@ export const PerformanceProvider = ({ children }: { children: React.ReactNode })
             if (filters.startDate) backendFilters.startDate = String(filters.startDate);
             if (filters.endDate) backendFilters.endDate = String(filters.endDate);
 
-            console.log('Frontend filters:', filters);
-            console.log('Backend filters:', backendFilters);
+
+
 
             const params = new URLSearchParams(backendFilters);
             const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/overview`, { params });

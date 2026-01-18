@@ -37,20 +37,23 @@ export const ContractsProvider = ({ children }: { children: React.ReactNode }) =
         setLoading(true);
         setError(null);
         try {
-            // بناء الـ params كما يتوقعها الباك إند
+
+
+            // Build params
             const params = new URLSearchParams();
             params.append('sf_account_number', accountNumber);
             ['signed', 'active', 'on_hold', 'suspended', 'replaced'].forEach(s => params.append('status', s));
-            
+
             if (contractNumber) {
-                // الباك إند قد لا يدعم البحث المباشر، لكننا نجهزه
                 params.append('contract_number', contractNumber);
             }
 
             const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/contracts`, { params });
+
             setContracts(response.data.data || []);
 
         } catch (err: any) {
+            console.error('Error fetching contracts:', err);
             setError(err.response?.data?.message || "Failed to fetch contracts.");
         } finally {
             setLoading(false);

@@ -32,6 +32,8 @@ export const PaymentsProvider = ({ children }: { children: React.ReactNode }) =>
         setLoading(true);
         setError(null);
         try {
+
+
             const params: any = { sf_account_number: accountNumber };
             if (contractNumber) {
                 params.sf_contract_id = contractNumber;
@@ -40,7 +42,8 @@ export const PaymentsProvider = ({ children }: { children: React.ReactNode }) =>
             const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/contracts/invoices`, { params });
             const allInvoices: Invoice[] = response.data.invoices || [];
 
-            // تقسيم الفواتير إلى مدفوعة وغير مدفوعة
+
+            // Split into paid and unpaid
             const paid = allInvoices.filter(inv => inv.status.toLowerCase() === 'payment completed');
             const unpaid = allInvoices.filter(inv => inv.status.toLowerCase() !== 'payment completed');
 
@@ -48,6 +51,7 @@ export const PaymentsProvider = ({ children }: { children: React.ReactNode }) =>
             setUnpaidInvoices(unpaid);
 
         } catch (err: any) {
+            console.error('Error fetching invoices:', err);
             setError(err.response?.data?.message || "Failed to fetch invoices.");
         } finally {
             setLoading(false);

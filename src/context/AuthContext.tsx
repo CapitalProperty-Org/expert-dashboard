@@ -11,6 +11,7 @@ interface User {
   firstName: string;
   lastName: string;
   profilePhotoUrl?: string; // إضافة رابط الصورة للمستخدم
+  sfAccountNumber?: string;
 }
 interface Role {
   id: number;
@@ -45,7 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       axios.defaults.headers.common['Authorization'] = `Bearer ${currentToken}`;
       const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/users/me?t=${new Date().getTime()}`);
-      console.log('User data from API:', data);
+
       setUser(data);
     } catch (error) {
       console.error("Failed to fetch user, logging out.", error);

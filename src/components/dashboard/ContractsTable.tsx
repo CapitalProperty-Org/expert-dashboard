@@ -4,7 +4,7 @@ import type { Contract } from '../../context/ContractsContext';
 const tableHeaders = ["Contract # / Product", "Contract Duration", "Contract Price", "Payment Mode", "Signed By", "Status", "Actions"];
 
 interface ContractsTableProps {
-    contracts: Contract[];
+  contracts: Contract[];
 }
 
 const ContractsTable = ({ contracts }: ContractsTableProps) => {
@@ -49,7 +49,7 @@ const ContractsTable = ({ contracts }: ContractsTableProps) => {
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-medium align-top">
-                 <button className="bg-white border border-gray-300 text-gray-700 font-semibold py-1 px-4 rounded-md text-sm hover:bg-gray-100">View</button>
+                <button className="bg-white border border-gray-300 text-indigo-600 font-semibold py-1 px-4 rounded-md text-sm hover:bg-gray-50">View</button>
               </td>
             </tr>
           ))}

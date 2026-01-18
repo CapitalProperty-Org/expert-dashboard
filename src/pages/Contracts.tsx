@@ -6,16 +6,20 @@ import { useContracts, ContractsProvider } from '../context/ContractsContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { useDebounce } from '../hooks/useDebounce';
 
+import { useAuth } from '../context/AuthContext';
+
 const ContractsComponent = () => {
+    const { user } = useAuth();
     const { contracts, loading, error, fetchContracts } = useContracts();
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 500);
 
     useEffect(() => {
-        // افترض أن رقم الحساب ثابت، يمكنك جلبه من AuthContext
-        fetchContracts('11441', debouncedSearch);
-    }, [debouncedSearch, fetchContracts]);
-    
+        if (user?.sfAccountNumber) {
+            fetchContracts(user.sfAccountNumber, debouncedSearch);
+        }
+    }, [debouncedSearch, fetchContracts, user?.sfAccountNumber]);
+
     const renderContent = () => {
         if (loading) return <div className="flex justify-center items-center h-full"><LoadingSpinner /></div>;
         if (error) return <div className="text-center text-red-500 py-16">{error}</div>;
@@ -34,11 +38,11 @@ const ContractsComponent = () => {
                         </button>
                     </Link>
                 </div>
-                
+
                 <div className="relative w-full lg:max-w-xs">
                     <input type="text" placeholder="Search by contract number" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full bg-white pl-4 pr-10 py-2.5 border rounded-lg text-sm" />
                     <button className="absolute inset-y-0 right-0 flex items-center justify-center w-12 border-l bg-gray-50 rounded-r-lg hover:bg-gray-100">
-                      <Search size={18} className="text-gray-500" />
+                        <Search size={18} className="text-gray-500" />
                     </button>
                 </div>
             </div>
