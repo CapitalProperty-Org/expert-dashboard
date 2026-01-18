@@ -81,6 +81,8 @@ export const notificationSettingsData = [
                 settings: [
                     { label: "Credits released", typeId: 17 },
                     { label: "Low credits", typeId: 18 },
+                    { label: "Credits deducted", typeId: 49 },
+                    { label: "Credits expiring soon", typeId: 50 },
                 ]
             }
         ]
