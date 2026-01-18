@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import { formatNotificationDate } from '../../../utils/formatDate';
-import { fetchNotifications, markAllNotificationsAsRead } from '../../../services/notificationService';
+import { notificationSettingsData } from '../../../data/notificationSettingsData';
+import { fetchNotifications, markAllNotificationsAsRead, markNotificationAsRead } from '../../../services/notificationService';
 import type { Notification } from '../../../types';
 
 const NotificationList = () => {
@@ -33,7 +34,7 @@ const NotificationList = () => {
     const handleMarkAllAsRead = async () => {
         try {
             await markAllNotificationsAsRead();
-            await loadNotifications(currentPage);
+            await loadNotifications(currentPage); // Refresh to clear dots
         } catch (error) {
             console.error('Error marking all notifications as read:', error);
         }
@@ -43,30 +44,43 @@ const NotificationList = () => {
         loadNotifications(currentPage);
     };
 
-    const getNotificationCategory = (notification: Notification): string => {
-        const categoryMap: { [key: number]: string } = {
-            14: 'Community Top Spot',
-            20: 'Agent Verification',
-            25: 'Agent Holiday Mode',
-        };
-        
-        return categoryMap[notification.notificationTypeId] || 'General';
+    const handleNotificationClick = async (notification: Notification) => {
+        if (notification.seenAt) return;
+
+        // Optimistic update
+        setNotifications(prev => prev.map(n =>
+            n.id === notification.id
+                ? { ...n, seenAt: new Date().toISOString() }
+                : n
+        ));
+
+        try {
+            await markNotificationAsRead(notification.id);
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+            // Revert on error if needed, but for read status it's usually fine to swallow
+        }
     };
 
-    const getNotificationSubcategory = (notification: Notification): string => {
-        const subcategoryMap: { [key: number]: string } = {
-            14: 'CTS won',
-            20: 'Verification approved',
-            25: 'Upcoming agent holiday reminder',
-        };
-        
-        return subcategoryMap[notification.notificationTypeId] || 'General';
+    const getCategoryInfo = (typeId: number) => {
+        for (const section of notificationSettingsData) {
+            for (const group of section.groups) {
+                const setting = group.settings.find(s => s.typeId === typeId);
+                if (setting) {
+                    return {
+                        category: section.category,
+                        subCategory: group.subCategory
+                    };
+                }
+            }
+        }
+        return { category: 'General', subCategory: 'General' };
     };
 
     if (loading) {
         return (
             <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 "></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600"></div>
             </div>
         );
     }
@@ -84,7 +98,7 @@ const NotificationList = () => {
                         <path d="M52.5 35L25 25V95H52.5V35Z" fill="#E5E7EB" />
                         <rect x="12.5" y="57.5" width="12.5" height="37.5" fill="#F3F4F6" />
                         <rect x="0" y="67.5" width="12.5" height="27.5" fill="#F3F4F6" />
-                        <path d="M45 100H55V0H45V100Z" fill="white"/>
+                        <path d="M45 100H55V0H45V100Z" fill="white" />
                     </svg>
                 </div>
                 <h2 className="text-xl font-bold text-gray-800 mt-6">You don't have any notifications yet.</h2>
@@ -98,13 +112,13 @@ const NotificationList = () => {
             <div className="flex items-center gap-3">
                 <button
                     onClick={handleMarkAllAsRead}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                     Mark all as read
                 </button>
                 <button
                     onClick={handleRefresh}
-                    className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="flex items-center justify-center w-10 h-10 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                     <RefreshCw size={16} />
                 </button>
@@ -113,28 +127,41 @@ const NotificationList = () => {
             {/* Notifications List */}
             <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                 <div className="divide-y divide-gray-200">
-                    {notifications.map((notification) => (
-                        <div
-                            key={notification.id}
-                            className={cn(
-                                "p-4 hover:bg-gray-50 transition-colors cursor-pointer",
-                                // !notification.seenAt && "bg-blue-50"
-                            )}
-                        >
-                            <div className="flex items-start justify-between">
-                                <div className="flex-1 space-y-1">
-                                    <p className="text-xs text-gray-500">
-                                        {formatNotificationDate(notification.createdAt)} • {getNotificationCategory(notification)} • {getNotificationSubcategory(notification)}
-                                    </p>
-                                    <h3 className="font-bold text-gray-900">{notification.title}</h3>
-                                    <p className="text-sm text-gray-600">{notification.body}</p>
+                    {notifications.map((notification) => {
+                        const { category, subCategory } = getCategoryInfo(notification.notificationTypeId);
+                        const isUnread = !notification.seenAt;
+
+                        return (
+                            <div
+                                key={notification.id}
+                                onClick={() => handleNotificationClick(notification)}
+                                className={cn(
+                                    "p-4 hover:bg-gray-50 transition-colors cursor-pointer relative",
+                                    isUnread ? "bg-white" : "bg-white/50" // Keep bg white but maybe distinction if needed, user just asked for red dot
+                                )}
+                            >
+                                <div className="flex items-start justify-between">
+                                    <div className="flex-1 space-y-1">
+                                        <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                                            <span>{formatNotificationDate(notification.createdAt)}</span>
+                                            <span>•</span>
+                                            <span>{category}, {subCategory}</span>
+                                            {isUnread && (
+                                                <>
+                                                    <span>•</span>
+                                                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full inline-block"></span>
+                                                </>
+                                            )}
+                                        </div>
+                                        <h3 className={cn("font-bold text-gray-900", isUnread ? "font-bold" : "font-semibold")}>
+                                            {notification.title}
+                                        </h3>
+                                        <p className="text-sm text-gray-600 leading-relaxed">{notification.body}</p>
+                                    </div>
                                 </div>
-                                {/* {!notification.seenAt && (
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full ml-4 mt-2"></div>
-                                )} */}
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
 
@@ -144,7 +171,7 @@ const NotificationList = () => {
                     <div className="text-sm text-gray-600">
                         Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, totalNotifications)} of {totalNotifications} notifications
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
@@ -158,11 +185,11 @@ const NotificationList = () => {
                         >
                             ←
                         </button>
-                        
+
                         <span className="text-sm text-gray-600 px-2">
                             Page {currentPage} of {totalPages}
                         </span>
-                        
+
                         <button
                             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                             disabled={currentPage === totalPages}

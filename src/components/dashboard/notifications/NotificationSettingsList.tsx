@@ -29,9 +29,9 @@ const NotificationSettingsList = () => {
     };
 
     const handlePreferenceUpdate = (typeId: number, inApp: boolean, email: boolean) => {
-        setPreferences(prev => 
-            prev.map(pref => 
-                pref.typeId === typeId 
+        setPreferences(prev =>
+            prev.map(pref =>
+                pref.typeId === typeId
                     ? { ...pref, receiveInApp: inApp, receiveEmail: email }
                     : pref
             )
@@ -54,20 +54,29 @@ const NotificationSettingsList = () => {
                         <h3 className="text-lg font-bold text-gray-800">{section.category}</h3>
                     </div>
                     <div className="divide-y divide-gray-200">
-                        {section.settings.map(setting => {
-                            const preference = getPreferenceByTypeId(setting.typeId);
-                            return (
-                                <div key={setting.label} className="flex justify-between items-center px-6 py-4 hover:bg-gray-50 transition-colors">
-                                    <span className="text-sm text-gray-700 font-medium">{setting.label}</span>
-                                    <NotificationToggle 
-                                        typeId={setting.typeId}
-                                        initialInApp={preference?.receiveInApp ?? true}
-                                        initialEmail={preference?.receiveEmail ?? true}
-                                        onUpdate={handlePreferenceUpdate}
-                                    />
+                        {section.groups.map((group) => (
+                            <div key={group.subCategory} className="group-section">
+                                <div className="px-6 py-3 bg-gray-50/50">
+                                    <h4 className="text-sm font-bold text-gray-900">{group.subCategory}</h4>
                                 </div>
-                            );
-                        })}
+                                <div className="divide-y divide-gray-100">
+                                    {group.settings.map(setting => {
+                                        const preference = getPreferenceByTypeId(setting.typeId);
+                                        return (
+                                            <div key={setting.label} className="flex justify-between items-center px-6 py-4 hover:bg-gray-50 transition-colors">
+                                                <span className="text-sm text-gray-700 font-medium">{setting.label}</span>
+                                                <NotificationToggle
+                                                    typeId={setting.typeId}
+                                                    initialInApp={preference?.receiveInApp ?? true}
+                                                    initialEmail={preference?.receiveEmail ?? true}
+                                                    onUpdate={handlePreferenceUpdate}
+                                                />
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             ))}

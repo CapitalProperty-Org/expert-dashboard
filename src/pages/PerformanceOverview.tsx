@@ -336,7 +336,7 @@ const PerformanceOverviewComponent = () => {
               <div className="w-48 h-32 bg-white border border-gray-200 rounded-lg p-3">
                 <h4 className="text-xs font-medium text-gray-700 mb-2">Breakdown by Type</h4>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} layout="horizontal" margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+                  <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
                     <XAxis type="number" hide />
                     <YAxis type="category" dataKey="name" hide />
                     <Tooltip
