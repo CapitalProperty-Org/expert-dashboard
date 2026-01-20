@@ -16,7 +16,7 @@ import SuccessToast from '../components/ui/SuccessToast';
 import ErrorToast from '../components/ui/ErrorToast';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import AccessDenied from '../components/ui/AccessDenied';
-import ConfirmModal from '../components/ui/ConfirmModal';
+import ExitListingModal from '../components/dashboard/add-listing/ExitListingModal';
 import { useAuth } from '../context/AuthContext';
 import { useCredits } from '../context/CreditsContext';
 import PromotionModal from '../components/dashboard/listing/PromotionModal';
@@ -910,17 +910,10 @@ const AddListingPage = () => {
           </div>
         </div>
 
-        <ConfirmModal
+        <ExitListingModal
           isOpen={isExitModalOpen}
-          title="Save as Draft?"
-          message="You have unsaved changes. Would you like to save this listing as a draft before exiting?"
-          confirmLabel={isSavingDraft ? "Saving..." : "Save Draft & Exit"}
-          secondaryLabel="Discard & Exit"
-          cancelLabel="Stay on Page"
-          onConfirm={confirmExitWithSave}
-          onSecondary={confirmExitWithoutSave}
+          onExit={confirmExitWithSave}
           onCancel={() => setIsExitModalOpen(false)}
-          type="info"
         />
       </div>
     </>
