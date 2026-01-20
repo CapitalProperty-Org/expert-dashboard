@@ -117,12 +117,15 @@ const AddListingPage = () => {
 
   // Auto-assign agent if user is an agent
   useEffect(() => {
-    if (user && (user.legacyRole === 'agent' || user.role === 'agent') && !formData.assignedAgent) {
-      dispatch({
-        type: 'UPDATE_FIELD',
-        field: 'assignedAgent',
-        value: { value: Number(user.id), label: `${user.firstName} ${user.lastName}` }
-      });
+    if (user && (user.legacyRole === 'agent' || user.role === 'agent')) {
+      // If no agent assigned, or just switched to empty state, auto-assign self
+      if (!formData.assignedAgent) {
+        dispatch({
+          type: 'UPDATE_FIELD',
+          field: 'assignedAgent',
+          value: { value: Number(user.id), label: `${user.firstName} ${user.lastName}` } // Self-assign
+        });
+      }
     }
   }, [user, formData.assignedAgent]);
 
@@ -439,11 +442,55 @@ const AddListingPage = () => {
   }, [debouncedFormData, token]); // Re-run when debounced data changes
 
 
+  const validateListing = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    const residentialTypes = ['apartment', 'villa', 'townhouse', 'penthouse', 'duplex', 'hotel_apartment', 'villa_compound'];
+    const isResidential = residentialTypes.includes(formData.propertyType);
+
+    // 1. Core Details
+    if (!formData.uae_emirate) errors.push("UAE Emirate is required.");
+    if (formData.uae_emirate === 'dubai') {
+      if (!formData.permitType) errors.push("Permit Type is required for Dubai.");
+      if (formData.permitType === 'rera' && !formData.reraPermitNumber) errors.push("RERA Permit Number is required.");
+      if (formData.permitType === 'dtcm' && !formData.dtcmPermitNumber) errors.push("DTCM Permit Number is required.");
+    }
+    if (formData.uae_emirate === 'northern_emirates' && !formData.city) errors.push("City is required.");
+
+    if (!formData.category) errors.push("Category is required.");
+    if (!formData.propertyType) errors.push("Property Type is required.");
+    if (!formData.offeringType) errors.push("Offering Type (Rent/Sale) is required.");
+    if (formData.offeringType === 'rent' && !formData.rentalPeriod) errors.push("Rental Period is required.");
+
+    if (!formData.propertyLocation && !formData.googleAddress) errors.push("Property Location is required.");
+    if (!formData.assignedAgent) errors.push("Assigned Agent is required.");
+
+    // 2. Specifications
+    if (!formData.size || Number(formData.size) <= 0) errors.push("Size (sqft) is required.");
+
+    if (isResidential) {
+      if (!formData.bedrooms) errors.push("Bedrooms is required.");
+      if (!formData.bathrooms) errors.push("Bathrooms is required.");
+    }
+
+    // 3. Price
+    if (!formData.price || Number(formData.price) <= 0) errors.push("Price is required.");
+
+    // 4. Description
+    if (!formData.title || formData.title.trim().length === 0) errors.push("English Title is required.");
+
+    return { isValid: errors.length === 0, errors };
+  };
+
   const handlePublish = () => {
-    if (!completedSteps.includes('core')) {
-      setError("Please complete the 'Core details' section first.");
+    const { isValid, errors } = validateListing();
+
+    if (!isValid) {
+      const errorList = errors.map(e => `• ${e}`).join('\n');
+      setError(`Please fix the following errors:\n${errorList}`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
+
     setIsPromotionModalOpen(true);
   };
 
@@ -798,16 +845,10 @@ const AddListingPage = () => {
     // FormLabel text="Size (sqft)" required
     if (!formData.size || Number(formData.size) <= 0) return false;
 
-    // Bedrooms/Bathrooms - usually required for residential
-    // If propertyType has bedrooms field visible? Form logic:
-    // {["apartment", "villa", "townhouse", "penthouse", "duplex", "hotel_apartment", ...].includes(state.propertyType) -> shows bedrooms
-    // We can loosely check: if values are empty strings, they are invalid IF the field is relevant. 
-    // But simplistic check: Size is safe. 
-    // Title is required? FormLabel text="Title (English)" required
-    if (!formData.title || formData.title.trim().length === 0) return false;
-
-    return true;
+    return true; // If all checks pass, the form is valid for basic UI feedback
   }, [formData]);
+
+
 
   return (
     <>
@@ -831,6 +872,23 @@ const AddListingPage = () => {
         />
         <div className="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-8 p-4 sm:p-6 lg:p-8">
           <div className="space-y-4">
+            {error && error.includes('\n') && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-md shadow-sm">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">Validation Error</h3>
+                    <div className="mt-2 text-sm text-red-700 whitespace-pre-line">
+                      {error}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <h1 className="text-2xl font-bold text-gray-800">Add a listing</h1>
             {sections.map(section => (
               <AccordionSection
