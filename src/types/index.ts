@@ -34,6 +34,7 @@ export interface ListingState {
   permitType: 'rera' | 'dtcm' | 'none' | 'adrec' | 'non-adrec' | null;
   reraPermitNumber: string;
   dtcmPermitNumber: string;
+  brokerLicense?: string;
   city?: string | null;
   category: 'residential' | 'commercial' | null;
   offeringType: 'rent' | 'sale' | null;
@@ -70,11 +71,13 @@ export interface ListingState {
   googleAddressComponents?: any; // or specific type
   updatedAt?: string | null;
   createdAt?: string | null;
+  isPermitValidated?: boolean;
 }
 
 export type ListingAction =
   | { type: 'UPDATE_FIELD'; field: keyof ListingState; value: unknown; }
   | { type: 'RESET_PERMIT' }
+  | { type: 'VALIDATE_PERMIT'; value: boolean }
   | { type: 'RESET_REQUIREMENTS' }
   | { type: 'SET_IMAGES'; value: (File | { url: string; preview?: string; })[] }
   | { type: 'SET_STATE'; payload: Partial<ListingState> };

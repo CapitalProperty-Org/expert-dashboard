@@ -23,6 +23,7 @@ import PromotionModal from '../components/dashboard/listing/PromotionModal';
 
 const initialState: ListingState = {
   uae_emirate: '', city: null, permitType: null, reraPermitNumber: '', dtcmPermitNumber: '',
+  brokerLicense: '',
   category: null, offeringType: null, rentalPeriod: null, propertyType: '',
   propertyLocation: null, assignedAgent: null, reference: '',
   available: 'immediately', availableDate: null, size: '', bedrooms: '',
@@ -31,7 +32,7 @@ const initialState: ListingState = {
   price: '', downPayment: '', numberOfCheques: '', amenities: [],
   title: '', title_ar: '', description: '', description_ar: '',
   images: [], latitude: null, longitude: null, googleAddress: '', googleAddressComponents: null,
-  updatedAt: null
+  updatedAt: null, isPermitValidated: false
 };
 
 function listingReducer(state: ListingState, action: ListingAction): ListingState {
@@ -40,6 +41,8 @@ function listingReducer(state: ListingState, action: ListingAction): ListingStat
       return { ...state, [action.field]: action.value };
     case 'SET_IMAGES':
       return { ...state, images: action.value };
+    case 'VALIDATE_PERMIT':
+      return { ...state, isPermitValidated: action.value };
     case 'RESET_PERMIT':
       return {
         ...state,
@@ -47,6 +50,8 @@ function listingReducer(state: ListingState, action: ListingAction): ListingStat
         // city: null, // Keep city for memory when switching back to NE
         reraPermitNumber: '',
         dtcmPermitNumber: '',
+        brokerLicense: '',
+        isPermitValidated: false,
         category: null,
         offeringType: null,
         rentalPeriod: null,

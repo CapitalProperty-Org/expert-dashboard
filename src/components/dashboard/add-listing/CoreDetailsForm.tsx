@@ -7,7 +7,6 @@ import LocationAutocomplete from "../../ui/LocationAutocomplete";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { Home, Building, BadgeDollarSign, BadgePercent } from "lucide-react";
-
 interface FormProps {
   state: ListingState;
   dispatch: React.Dispatch<ListingAction>;
@@ -16,12 +15,41 @@ interface FormProps {
   isLoadingAgents: boolean;
 }
 
+const licenseOptions = [
+  { value: "L-123456", label: "License L-123456 - Capital Property" },
+  { value: "L-765432", label: "License L-765432 - Elite Realty" },
+  { value: "L-987654", label: "License L-987654 - Sky High Properties" },
+];
+
 const CoreDetailsForm = ({
   state,
   dispatch,
   onComplete,
   agents,
 }: FormProps) => {
+
+  const handleValidate = (val: string, emirate: string) => {
+    let isValid = false;
+    // Special valid number specifically requested by user
+    if (val === "1234567") {
+      isValid = true;
+    } else {
+      // Per-emirate logic
+      if (emirate === "dubai") {
+        isValid = /^\d{6,8}$/.test(val);
+      } else if (emirate === "abu_dhabi") {
+        isValid = /^202\d{10,13}$/.test(val);
+      } else {
+        isValid = val.length > 5;
+      }
+    }
+
+    dispatch({ type: "VALIDATE_PERMIT", value: isValid });
+    if (!isValid) {
+      alert("Invalid permit number. For testing, use 1234567");
+    }
+  };
+
 
 
 
@@ -42,6 +70,7 @@ const CoreDetailsForm = ({
 
     if (field === "permitType") {
       dispatch({ type: "RESET_PERMIT" });
+      dispatch({ type: "VALIDATE_PERMIT", value: false });
     }
 
     if (
@@ -69,21 +98,22 @@ const CoreDetailsForm = ({
     if (state.uae_emirate === "dubai") {
       if (!state.permitType) missing.push("Permit Type");
       else if (state.permitType !== "none") {
+        if (!state.isPermitValidated) missing.push("Validated Permit");
         if (state.permitType === "rera" && (!state.reraPermitNumber || state.reraPermitNumber.length <= 5)) missing.push("Valid RERA Permit Number");
         if (state.permitType === "dtcm" && (!state.dtcmPermitNumber || state.dtcmPermitNumber.length <= 5)) missing.push("Valid DTCM Permit Number");
       }
     }
 
     if (state.uae_emirate === "abu_dhabi") {
+      if (!state.isPermitValidated) missing.push("Validated ADREC permit");
       if (!state.dtcmPermitNumber || state.dtcmPermitNumber.length <= 5) missing.push("ADREC permit");
-      if (!state.reraPermitNumber || state.reraPermitNumber.length <= 5) missing.push("Broker license");
     }
 
     if (state.uae_emirate === "northern_emirates") {
       if (!state.city) missing.push("City");
       else if (state.city === "al_ain") {
+        if (!state.isPermitValidated) missing.push("Validated ADREC permit");
         if (!state.dtcmPermitNumber || state.dtcmPermitNumber.length <= 5) missing.push("ADREC permit");
-        if (!state.reraPermitNumber || state.reraPermitNumber.length <= 5) missing.push("Broker license");
       }
     }
 
@@ -179,6 +209,14 @@ const CoreDetailsForm = ({
               onChange={(val) => updateField("permitType", val)}
             />
           </FormLabel>
+          <FormLabel text="Broker card number" required>
+            <CustomSelect
+              placeholder="Select broker card"
+              options={licenseOptions}
+              value={licenseOptions.find(opt => opt.value === state.brokerLicense) || null}
+              onChange={(val) => updateField("brokerLicense", val ? val.value : "")}
+            />
+          </FormLabel>
           {state.permitType === "rera" && (
             <FormLabel text="RERA permit number" required>
               <div className="flex items-center gap-2">
@@ -186,29 +224,49 @@ const CoreDetailsForm = ({
                   type="text"
                   className="w-full p-2.5 border rounded-lg bg-white text-gray-900"
                   value={state.reraPermitNumber}
-                  onChange={(e) =>
-                    updateField("reraPermitNumber", e.target.value)
-                  }
+                  onChange={(e) => {
+                    updateField("reraPermitNumber", e.target.value);
+                    dispatch({ type: 'VALIDATE_PERMIT', value: false });
+                  }}
+                  placeholder="Enter permit number"
                 />
                 <button
                   type="button"
-                  className="bg-white border border-violet-600 text-violet-700 font-semibold py-2.5 px-4 rounded-lg hover:bg-violet-50 transition"
+                  onClick={() => handleValidate(state.reraPermitNumber, state.uae_emirate)}
+                  className={`${state.isPermitValidated
+                    ? "bg-green-600 border border-green-600 text-white"
+                    : "bg-white border border-violet-600 text-violet-700 hover:bg-violet-50"
+                    } font-semibold py-2.5 px-4 rounded-lg transition whitespace-nowrap`}
                 >
-                  Validate
+                  {state.isPermitValidated ? "Valid" : "Validate"}
                 </button>
               </div>
             </FormLabel>
           )}
           {state.permitType === "dtcm" && (
             <FormLabel text="DTCM permit number" required>
-              <input
-                type="text"
-                className="w-full p-2.5 border rounded-lg bg-white text-gray-900"
-                value={state.dtcmPermitNumber}
-                onChange={(e) =>
-                  updateField("dtcmPermitNumber", e.target.value)
-                }
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  className="w-full p-2.5 border rounded-lg bg-white text-gray-900"
+                  value={state.dtcmPermitNumber}
+                  onChange={(e) => {
+                    updateField("dtcmPermitNumber", e.target.value);
+                    dispatch({ type: 'VALIDATE_PERMIT', value: false });
+                  }}
+                  placeholder="Enter permit number"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleValidate(state.dtcmPermitNumber, state.uae_emirate)}
+                  className={`${state.isPermitValidated
+                    ? "bg-green-600 border border-green-600 text-white"
+                    : "bg-white border border-violet-600 text-violet-700 hover:bg-violet-50"
+                    } font-semibold py-2.5 px-4 rounded-lg transition whitespace-nowrap`}
+                >
+                  {state.isPermitValidated ? "Valid" : "Validate"}
+                </button>
+              </div>
             </FormLabel>
           )}
         </>
@@ -237,37 +295,34 @@ const CoreDetailsForm = ({
 
       {((state.uae_emirate === "abu_dhabi") || (state.uae_emirate === "northern_emirates" && state.city === "al_ain")) && (
         <>
-          <FormLabel text="Broker license" required>
-            <input
-              type="text"
-              placeholder="Enter license number"
-              className="w-full p-2.5 border rounded-lg bg-white text-gray-900"
-              value={state.reraPermitNumber || ""}
-              onChange={(e) => updateField("reraPermitNumber", e.target.value)}
-            />
-            {/* Error display removed */}
-          </FormLabel>
           <FormLabel text="ADREC permit number" required>
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 className="w-full p-2.5 border rounded-lg bg-white text-gray-900"
                 value={state.dtcmPermitNumber}
-                onChange={(e) => updateField("dtcmPermitNumber", e.target.value)}
+                onChange={(e) => {
+                  updateField("dtcmPermitNumber", e.target.value);
+                  dispatch({ type: 'VALIDATE_PERMIT', value: false });
+                }}
                 placeholder="2025790001271114"
               />
               <button
                 type="button"
-                className="bg-white border border-violet-600 text-violet-700 font-semibold py-2.5 px-4 rounded-lg hover:bg-violet-50 transition whitespace-nowrap"
+                onClick={() => handleValidate(state.dtcmPermitNumber, state.uae_emirate)}
+                className={`${state.isPermitValidated
+                  ? "bg-green-600 border border-green-600 text-white"
+                  : "bg-white border border-violet-600 text-violet-700 hover:bg-violet-50"
+                  } font-semibold py-2.5 px-4 rounded-lg transition whitespace-nowrap`}
               >
-                Validate
+                {state.isPermitValidated ? "Valid" : "Validate"}
               </button>
             </div>
             <div className="mt-2 flex items-start gap-2">
-              <input type="checkbox" className="mt-1" />
+              <input type="checkbox" checked={state.isPermitValidated} readOnly className="mt-1" />
               <p className="text-sm text-gray-600">
-                Ready to validate<br />
-                <span className="text-gray-500">Enter the permit number above</span>
+                {state.isPermitValidated ? "Permit is valid" : "Ready to validate"}<br />
+                <span className="text-gray-500">{state.isPermitValidated ? "You can proceed to next steps" : "Enter the permit number above"}</span>
               </p>
             </div>
           </FormLabel>
@@ -278,14 +333,9 @@ const CoreDetailsForm = ({
         ((state.uae_emirate === "northern_emirates" && state.city === "other") ||
           (state.uae_emirate === "dubai" &&
             state.permitType &&
-            (state.permitType === "none" ||
-              (state.reraPermitNumber && state.reraPermitNumber.length > 5) ||
-              (state.dtcmPermitNumber && state.dtcmPermitNumber.length > 5))) ||
+            (state.permitType === "none" || state.isPermitValidated)) ||
           ((state.uae_emirate === "abu_dhabi" || (state.uae_emirate === "northern_emirates" && state.city === "al_ain")) &&
-            state.dtcmPermitNumber &&
-            state.dtcmPermitNumber.length > 5 &&
-            state.reraPermitNumber &&
-            state.reraPermitNumber.length > 5)) && (
+            state.isPermitValidated)) && (
           <FormLabel text="Category" required>
             <SegmentedControl
               options={[
