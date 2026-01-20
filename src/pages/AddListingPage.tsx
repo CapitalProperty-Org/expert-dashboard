@@ -108,6 +108,7 @@ const AddListingPage = () => {
   const lastSavedDataRef = React.useRef<string>('');
 
   const [agents, setAgents] = useState<SelectOption[]>([]);
+  const [agentData, setAgentData] = useState<any>(null);
   const [loadingLookups, setLoadingLookups] = useState(false);
 
   const debouncedFormData = useDebounce(formData, 500);
@@ -196,6 +197,20 @@ const AddListingPage = () => {
           updatedAt: listing.updated_at || null,
           createdAt: listing.created_at || null,
         };
+
+        // Store agent data with properties_count
+        if (listing.assigned_to) {
+          setAgentData({
+            id: listing.assigned_to.id,
+            name: `${listing.assigned_to.first_name || ''} ${listing.assigned_to.last_name || ''}`.trim() || listing.assigned_to.name,
+            properties_count: listing.assigned_to.properties_count || 0,
+            company: {
+              name: listing.assigned_to.company?.name || 'Agency',
+              logo_url: listing.assigned_to.company?.logo_url,
+              properties_count: listing.assigned_to.company?.properties_count || 0
+            }
+          });
+        }
 
 
         // Map backend listing to frontend state
@@ -905,7 +920,7 @@ const AddListingPage = () => {
           </div>
           <div className="hidden lg:block">
             <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto scrollbar-thin">
-              <ListingPreview state={formData} images={formData.images} listingId={id} />
+              <ListingPreview state={formData} images={formData.images} listingId={id} agentData={agentData} />
             </div>
           </div>
         </div>

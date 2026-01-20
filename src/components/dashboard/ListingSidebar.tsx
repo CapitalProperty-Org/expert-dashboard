@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Calendar, Clock, StickyNote } from 'lucide-react';
+import { X, User, Calendar, Clock, StickyNote, Edit2, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
@@ -39,6 +39,9 @@ const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
         return userId === assignedId || userId === createdId;
     }, [user, listing]);
 
+    const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+    const [editContent, setEditContent] = useState('');
+
     const fetchNotes = async () => {
         if (!listingId || !token) return;
         setNotesLoading(true);
@@ -74,8 +77,50 @@ const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
             fetchNotes(); // Re-fetch notes after adding
         } catch (err) {
             console.error('Failed to save note:', err);
-            // Optionally show error toast
         }
+    };
+
+    const handleUpdateNote = async (noteId: string) => {
+        if (!listingId || !token) return;
+        try {
+            await axios.put(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${listingId}/notes/${noteId}`,
+                { text: editContent },
+                { headers: { 'Authorization': `Bearer ${token}` } }
+            );
+            setEditingNoteId(null);
+            setEditContent('');
+            fetchNotes();
+        } catch (err) {
+            console.error('Failed to update note:', err);
+        }
+    };
+
+    const handleDeleteNote = async (noteId: string) => {
+        if (!listingId || !token) return;
+        if (!window.confirm('Are you sure you want to delete this note?')) return;
+
+        // Optimistic update
+        const previousNotes = [...notes];
+        setNotes(notes.filter(n => n.id !== noteId));
+
+        try {
+            await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${listingId}/notes/${noteId}`,
+                { headers: { 'Authorization': `Bearer ${token}` } }
+            );
+            // No need to fetchNotes if successful, as we already removed it. 
+            // But doing it silently in background is fine to ensure sync.
+            fetchNotes();
+        } catch (err) {
+            console.error('Failed to delete note:', err);
+            // Revert state on error
+            setNotes(previousNotes);
+            alert('Failed to delete note');
+        }
+    };
+
+    const startEditing = (note: any) => {
+        setEditingNoteId(note.id);
+        setEditContent(note.text);
     };
 
     useEffect(() => {
@@ -278,24 +323,83 @@ const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
                                             <div className="text-center text-red-500 py-4 text-sm">{notesError}</div>
                                         ) : notes.length > 0 ? (
                                             <div className="space-y-4">
-                                                {notes.map((note) => (
-                                                    <div key={note.id} className="bg-white border rounded-xl p-4 shadow-sm relative group">
-                                                        <p className="text-gray-800 text-sm font-medium mb-3 leading-relaxed">
-                                                            {note.text}
-                                                        </p>
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-2">
-                                                                <User size={16} className="text-gray-400" />
-                                                                <span className="text-xs text-gray-500 font-medium">
-                                                                    {note.created_by ? `${note.created_by.first_name} ${note.created_by.last_name}` : 'Unknown User'}
-                                                                </span>
-                                                            </div>
-                                                            <span className="text-xs text-gray-400">
-                                                                {new Date(note.created_at).toLocaleDateString()}
-                                                            </span>
+                                                {notes.map((note) => {
+                                                    const isOwner = Number(user?.id) === Number(note.created_by?.id);
+                                                    const isEditing = editingNoteId === note.id;
+
+                                                    return (
+                                                        <div key={note.id} className="bg-white border rounded-xl p-4 shadow-sm relative group">
+                                                            {isEditing ? (
+                                                                <div className="space-y-3">
+                                                                    <div className="relative">
+                                                                        <textarea
+                                                                            value={editContent}
+                                                                            onChange={(e) => setEditContent(e.target.value)}
+                                                                            maxLength={MAX_NOTE_CHARS}
+                                                                            className="w-full h-20 p-2 border rounded-lg resize-none focus:ring-1 focus:ring-violet-500 text-sm"
+                                                                            autoFocus
+                                                                        />
+                                                                        <div className="text-right text-xs text-gray-400">
+                                                                            {editContent.length}/{MAX_NOTE_CHARS}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex justify-end gap-2">
+                                                                        <button
+                                                                            onClick={() => setEditingNoteId(null)}
+                                                                            className="px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-md"
+                                                                        >
+                                                                            Cancel
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleUpdateNote(note.id)}
+                                                                            disabled={!editContent.trim()}
+                                                                            className="px-3 py-1.5 text-xs font-semibold text-white bg-violet-600 hover:bg-violet-700 rounded-md disabled:opacity-50"
+                                                                        >
+                                                                            Save
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <>
+                                                                    <div className="flex justify-between items-start mb-2">
+                                                                        <p className="text-gray-800 text-sm font-medium leading-relaxed pr-6">
+                                                                            {note.text}
+                                                                        </p>
+                                                                        {isOwner && (
+                                                                            <div className="flex gap-1 absolute top-3 right-3 bg-white pl-2">
+                                                                                <button
+                                                                                    onClick={() => startEditing(note)}
+                                                                                    className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-violet-600 transition-colors"
+                                                                                    title="Edit note"
+                                                                                >
+                                                                                    <Edit2 size={14} />
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => handleDeleteNote(note.id)}
+                                                                                    className="p-1 hover:bg-red-50 rounded text-gray-400 hover:text-red-500 transition-colors"
+                                                                                    title="Delete note"
+                                                                                >
+                                                                                    <X size={14} />
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex items-center justify-between mt-2">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <User size={16} className="text-gray-400" />
+                                                                            <span className="text-xs text-gray-500 font-medium">
+                                                                                {note.created_by ? `${note.created_by.first_name} ${note.created_by.last_name}` : 'Unknown User'}
+                                                                            </span>
+                                                                        </div>
+                                                                        <span className="text-xs text-gray-400">
+                                                                            {new Date(note.created_at).toLocaleDateString()}
+                                                                        </span>
+                                                                    </div>
+                                                                </>
+                                                            )}
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    );
+                                                })}
                                             </div>
                                         ) : (
                                             !isAddingNote && (

@@ -1,18 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, BedDouble, Bath, Ruler, Check, Monitor, User, Home, Camera, Scan } from 'lucide-react';
+import { MapPin, BedDouble, Bath, Ruler, Check, Monitor, User, Home, Camera, Scan, Image as ImageIcon } from 'lucide-react';
 import type { ListingState } from '../../../types';
 import { formatDistanceToNow } from 'date-fns';
 import ErrorToast from '../../ui/ErrorToast';
 
-const ListingPreview = ({ state, images = [], listingId, isFullPage = false }: { state: ListingState; images?: (File | { url: string; preview?: string; })[]; listingId?: string | number; isFullPage?: boolean }) => {
+const ListingPreview = ({
+    state,
+    images = [],
+    listingId,
+    isFullPage = false,
+    agentData
+}: {
+    state: ListingState;
+    images?: (File | { url: string; preview?: string; })[];
+    listingId?: string | number;
+    isFullPage?: boolean;
+    agentData?: {
+        id?: number;
+        name?: string;
+        properties_count?: number;
+        company?: {
+            name?: string;
+            logo_url?: string;
+            properties_count?: number;
+        };
+    };
+}) => {
 
     const locationLabel = state.propertyLocation ? state.propertyLocation.label : 'Listing location';
-    const agentLabel = state.assignedAgent ? state.assignedAgent.label : 'Agent Name';
+    const agentLabel = agentData?.name || (state.assignedAgent ? state.assignedAgent.label : 'Agent Name');
+    const agentPropertiesCount = agentData?.properties_count ?? 0;
+    const companyName = agentData?.company?.name || 'Agency';
+    const companyPropertiesCount = agentData?.company?.properties_count ?? 0;
 
 
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [showErrorToast, setShowErrorToast] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [showFullDescription, setShowFullDescription] = useState(false);
 
     useEffect(() => {
         const createdUrls: string[] = [];
@@ -60,12 +85,14 @@ const ListingPreview = ({ state, images = [], listingId, isFullPage = false }: {
 
     // Unified Image Component using Grid Layout
     const ImageGallery = () => (
-        <div className={`grid grid-cols-3 gap-2 mb-6 w-full bg-gray-100 rounded-lg overflow-hidden ${isFullPage ? 'h-[450px]' : 'aspect-[3/2]'}`}>
-            <div className="col-span-2 relative h-full bg-gray-200">
+        <div className={`grid grid-cols-3 gap-2 mb-6 w-full rounded-lg overflow-hidden ${isFullPage ? 'h-[450px]' : 'aspect-[3/2]'}`}>
+            <div className="col-span-2 relative h-full">
                 {imagePreviews[0] ? (
                     <img src={imagePreviews[0]} alt="Property Main" className="absolute inset-0 w-full h-full object-cover" />
                 ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">No images</div>
+                    <div className="absolute inset-0 bg-sky-50 border-2 border-dashed border-sky-200 flex items-center justify-center rounded-l-lg">
+                        <ImageIcon strokeWidth={1.5} size={48} className="text-sky-200" />
+                    </div>
                 )}
                 {imagePreviews.length > 0 && (
                     <span className="absolute bottom-3 left-3 bg-black/75 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-md flex items-center gap-1.5 shadow-lg z-50 backdrop-blur-md border border-white/20">
@@ -75,12 +102,16 @@ const ListingPreview = ({ state, images = [], listingId, isFullPage = false }: {
                 )}
             </div>
             <div className="grid grid-rows-2 gap-2 col-span-1 h-full">
-                <div className="relative h-full bg-gray-200 overflow-hidden group">
+                <div className="relative h-full overflow-hidden group">
                     {imagePreviews[1] ? (
                         <img src={imagePreviews[1]} alt="Property Sub 1" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                    ) : <div className="absolute inset-0 bg-gray-100" />}
+                    ) : (
+                        <div className="absolute inset-0 bg-sky-50 border-2 border-dashed border-sky-200 flex items-center justify-center rounded-tr-lg">
+                            <ImageIcon strokeWidth={1.5} size={32} className="text-sky-200" />
+                        </div>
+                    )}
                 </div>
-                <div className="relative h-full bg-gray-200 overflow-hidden group">
+                <div className="relative h-full overflow-hidden group">
                     {imagePreviews[2] ? (
                         <div className="relative w-full h-full">
                             <img src={imagePreviews[2]} alt="Property Sub 2" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -90,7 +121,11 @@ const ListingPreview = ({ state, images = [], listingId, isFullPage = false }: {
                                 </div>
                             )}
                         </div>
-                    ) : <div className="absolute inset-0 bg-gray-100" />}
+                    ) : (
+                        <div className="absolute inset-0 bg-sky-50 border-2 border-dashed border-sky-200 flex items-center justify-center rounded-br-lg">
+                            <ImageIcon strokeWidth={1.5} size={32} className="text-sky-200" />
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -148,10 +183,17 @@ const ListingPreview = ({ state, images = [], listingId, isFullPage = false }: {
 
                 {/* Description */}
                 <div className="mb-6">
-                    <p className={`text-gray-600 leading-relaxed ${isFullPage ? 'text-base' : 'text-xs line-clamp-4'}`}>
+                    <p className={`text-gray-600 leading-relaxed ${isFullPage || showFullDescription ? 'text-base' : 'text-xs line-clamp-4'}`}>
                         {state.description || 'Property description will appear here...'}
                     </p>
-                    {!isFullPage && <button className="text-violet-600 text-xs font-semibold mt-1 hover:underline">See full description</button>}
+                    {!isFullPage && (
+                        <button
+                            onClick={() => setShowFullDescription(!showFullDescription)}
+                            className="text-violet-600 text-xs font-semibold mt-1 hover:underline"
+                        >
+                            {showFullDescription ? 'See less' : 'See full description'}
+                        </button>
+                    )}
                 </div>
 
                 {/* Property Details */}
@@ -224,33 +266,41 @@ const ListingPreview = ({ state, images = [], listingId, isFullPage = false }: {
 
                 <div className="my-6 pt-6 border-t border-gray-100">
                     <h3 className="text-lg font-bold mb-4">Provided by</h3>
-                    <div className={`bg-gray-50 p-6 rounded-xl border border-gray-100 flex flex-col ${isFullPage ? 'md:flex-row justify-between items-start md:items-center' : 'gap-4'} gap-6`}>
-                        <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 bg-gray-200 rounded-full overflow-hidden shrink-0 flex items-center justify-center text-gray-400">
-                                <User size={32} />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-lg text-gray-900">{agentLabel}</h4>
-                                <p className="text-sm text-gray-500">No ratings</p>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col">
-                            <span className="text-xs text-gray-400 mb-1">Languages</span>
-                            <span className="text-sm font-semibold text-gray-700">English, Arabic</span>
-                        </div>
-
-                        <div className={`flex flex-col ${isFullPage ? 'sm:flex-row w-full md:w-auto' : 'w-full'} items-center gap-3`}>
-                            {isFullPage && (
-                                <div className="hidden sm:block">
-                                    {/* Placeholder for agency logo if available */}
+                    <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-16 h-16 bg-gray-200 rounded-full overflow-hidden shrink-0 flex items-center justify-center text-gray-400">
+                                    <User size={32} />
                                 </div>
-                            )}
-                            <button className="w-full sm:w-auto px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
-                                See agency properties
-                            </button>
-                            <button className="w-full sm:w-auto px-4 py-2 bg-white border border-gray-300 rounded-lg text-xs font-semibold text-violet-600 hover:bg-violet-50 transition-colors border-violet-100">
-                                See agent properties
+                                <div>
+                                    <h4 className="font-bold text-lg text-gray-900">{agentLabel}</h4>
+                                    <p className="text-sm text-gray-500">No ratings</p>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-row md:flex-col gap-6 md:gap-1.5 md:text-right">
+                                <div className="flex flex-col md:flex-row gap-1 md:gap-8">
+                                    <span className="text-sm font-medium text-gray-500">Languages</span>
+                                    <span className="text-sm font-semibold text-gray-800">English, Arabic</span>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row gap-4 items-center">
+                            <div className="w-full md:w-auto relative group">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <div className="w-8 h-8 rounded bg-gray-200 flex items-center justify-center text-gray-400">
+                                        <Home size={16} />
+                                    </div>
+                                </div>
+                                <button className="w-full md:w-auto pl-14 pr-4 py-3 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-sky-600 hover:bg-gray-50 hover:underline transition-all shadow-sm">
+                                    See agency properties ({companyPropertiesCount})
+                                </button>
+                            </div>
+
+                            <button className="w-full md:w-auto px-6 py-3 bg-white border border-violet-200 rounded-lg text-sm font-semibold text-violet-700 hover:bg-violet-50 transition-colors shadow-sm ml-auto">
+                                See agent properties ({agentPropertiesCount})
                             </button>
                         </div>
                     </div>

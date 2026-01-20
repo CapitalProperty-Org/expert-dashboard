@@ -9,6 +9,7 @@ const ListingPreviewPage = () => {
     const { id } = useParams();
     const { token } = useAuth();
     const [listingState, setListingState] = useState<ListingState | null>(null);
+    const [agentData, setAgentData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -23,6 +24,21 @@ const ListingPreviewPage = () => {
 
                 const price = listing.price || {};
                 const amounts = price.amounts || {};
+
+                // Store agent data with properties_count
+                if (listing.assigned_to) {
+                    console.log('Agent data from API:', listing.assigned_to);
+                    setAgentData({
+                        id: listing.assigned_to.id,
+                        name: `${listing.assigned_to.first_name || ''} ${listing.assigned_to.last_name || ''}`.trim() || listing.assigned_to.name,
+                        properties_count: listing.assigned_to.properties_count || 0,
+                        company: {
+                            name: listing.assigned_to.company?.name || 'Agency',
+                            logo_url: listing.assigned_to.company?.logo_url,
+                            properties_count: listing.assigned_to.company?.properties_count || 0
+                        }
+                    });
+                }
 
                 // Map API listing to ListingState
                 const mappedState: ListingState = {
@@ -91,7 +107,12 @@ const ListingPreviewPage = () => {
     return (
         <div className="bg-white min-h-screen">
             <div className="container mx-auto px-4 max-w-5xl py-8">
-                <ListingPreview state={listingState} images={listingState.images} isFullPage={true} />
+                <ListingPreview
+                    state={listingState}
+                    images={listingState.images}
+                    isFullPage={true}
+                    agentData={agentData}
+                />
             </div>
         </div>
     );
