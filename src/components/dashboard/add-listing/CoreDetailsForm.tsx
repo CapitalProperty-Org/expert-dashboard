@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { validatePermit } from "../../../utils/validations";
 import type { ListingAction, ListingState, SelectOption } from "../../../types";
 import CustomSelect from "../../ui/CustomSelect";
 import SegmentedControl from "../../ui/SegmentedControl";
@@ -29,20 +30,7 @@ const CoreDetailsForm = ({
 }: FormProps) => {
 
   const handleValidate = (val: string, emirate: string) => {
-    let isValid = false;
-    // Special valid number specifically requested by user
-    if (val === "1234567") {
-      isValid = true;
-    } else {
-      // Per-emirate logic
-      if (emirate === "dubai") {
-        isValid = /^\d{6,8}$/.test(val);
-      } else if (emirate === "abu_dhabi") {
-        isValid = /^202\d{10,13}$/.test(val);
-      } else {
-        isValid = val.length > 5;
-      }
-    }
+    const isValid = validatePermit(val, emirate);
 
     dispatch({ type: "VALIDATE_PERMIT", value: isValid });
     if (!isValid) {

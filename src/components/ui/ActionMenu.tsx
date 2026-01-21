@@ -11,6 +11,8 @@ import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/themes/light.css';
 import { useAuth } from '../../context/AuthContext';
+import { useCredits } from '../../context/CreditsContext';
+import PromotionModal from '../dashboard/listing/PromotionModal';
 
 interface ListingData {
     id: string;
@@ -55,11 +57,13 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
     const { openModal, ConfirmationModalComponent } = useConfirmationModal();
     const { archiveListing, publishListing, deleteListing, unpublishListing } = useListings();
     const { user } = useAuth();
+    const { balance, refreshData: refreshCredits } = useCredits();
     const [showSuccessToast, setShowSuccessToast] = useState(false);
     const [showErrorToast, setShowErrorToast] = useState(false);
     const [message, setMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+    const [isPromotionModalOpen, setIsPromotionModalOpen] = useState(false);
     const [visible, setVisible] = useState(false); // Tippy visibility state
 
     const canEdit = React.useMemo(() => {
@@ -287,6 +291,30 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
         }
     };
 
+    const handleConfirmPublish = async (plan: string, duration: string, cost: number, autoRenew: boolean) => {
+        setIsPromotionModalOpen(false);
+        setIsLoading(true);
+        try {
+            await publishListing(listingId, {
+                plan,
+                duration,
+                auto_renew: autoRenew,
+                deduct_credits: true
+            });
+            await refreshCredits();
+            setMessage('Listing published successfully! 🚀');
+            setShowSuccessToast(true);
+            onActionComplete();
+        } catch (error: unknown) {
+            console.error('Error publishing listing:', error);
+            const errMsg = error instanceof Error ? error.message : "Failed to publish listing.";
+            setMessage(errMsg);
+            setShowErrorToast(true);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleAction = async (action: 'archive' | 'delete' | 'createPdf' | 'publish' | 'copy' | 'unpublish') => {
         setIsLoading(true);
         // Do NOT close immediately for async actions if you want to show loading state inside menu? 
@@ -294,6 +322,12 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
         // But for consistency let's match previous behavior - wait for action? 
         // Previous behavior: setIsOpen(false) immediately. 
         setVisible(false);
+
+        if (action === 'publish') {
+            setIsPromotionModalOpen(true);
+            setIsLoading(false);
+            return;
+        }
 
         try {
             switch (action) {
@@ -309,11 +343,6 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                     break;
                 case 'createPdf':
                     await generatePDF();
-                    break;
-                case 'publish':
-                    await publishListing(listingId);
-                    setMessage('Listing published successfully! 🚀');
-                    setShowSuccessToast(true);
                     break;
                 case 'unpublish':
                     await unpublishListing(listingId);
@@ -506,6 +535,13 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                     onClose={() => setShowErrorToast(false)}
                 />
             )}
+
+            <PromotionModal
+                isOpen={isPromotionModalOpen}
+                onClose={() => setIsPromotionModalOpen(false)}
+                onConfirm={handleConfirmPublish}
+                availableCredits={balance?.current || 0}
+            />
         </div>
     );
 };

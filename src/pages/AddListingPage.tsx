@@ -1,6 +1,7 @@
 import React, { useEffect, useReducer, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { validatePermit } from '../utils/validations';
 import type { ListingAction, ListingState, SelectOption } from '../types';
 import AddListingHeader from '../components/dashboard/add-listing/AddListingHeader';
 import CoreDetailsForm from '../components/dashboard/add-listing/CoreDetailsForm';
@@ -201,6 +202,11 @@ const AddListingPage = () => {
           availableDate,
           updatedAt: listing.updated_at || null,
           createdAt: listing.created_at || null,
+          isPermitValidated: validatePermit(
+            listing.permit_type === 'rera' ? listing.rera_permit_number :
+              listing.permit_type === 'dtcm' ? listing.dtcm_permit_number : '',
+            listing.uae_emirate || ''
+          ) || (listing.uae_emirate === 'dubai' && listing.permit_type === 'none') || (listing.uae_emirate === 'abu_dhabi' && validatePermit(listing.dtcm_permit_number, 'abu_dhabi'))
         };
 
         // Store agent data with properties_count

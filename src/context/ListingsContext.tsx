@@ -74,7 +74,7 @@ interface ListingsContextType {
     approveListing: (id: string) => Promise<void>;
     rejectListing: (id: string) => Promise<void>;
     reassignListing: (id: string, payload: { new_assigned_to: string }) => Promise<void>;
-    publishListing: (id: string) => Promise<void>;
+    publishListing: (id: string, promotionParams?: { plan: string; duration: string; auto_renew: boolean; deduct_credits: boolean }) => Promise<void>;
     unpublishListing: (id: string) => Promise<void>;
     archiveListing: (id: string) => Promise<void>;
     unarchiveListing: (id: string) => Promise<void>;
@@ -171,12 +171,22 @@ export const ListingsProvider = ({ children }: { children: React.ReactNode }) =>
         }
     }, []);
 
-    const publishListing = useCallback(async (id: string) => {
+    const publishListing = useCallback(async (id: string, promotionParams?: { plan: string; duration: string; auto_renew: boolean; deduct_credits: boolean }) => {
         try {
-            await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/publish`, {
-                all: false,
-                listing_ids: [id]
-            });
+            if (promotionParams) {
+                await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/publish`, {
+                    listing_ids: [id],
+                    promotion_plan: promotionParams.plan,
+                    duration: promotionParams.duration,
+                    auto_renew: promotionParams.auto_renew,
+                    deduct_credits: promotionParams.deduct_credits
+                });
+            } else {
+                await axios.post(`${import.meta.env.VITE_BASE_URL}/api/listings/listings/${id}/publish`, {
+                    all: false,
+                    listing_ids: [id]
+                });
+            }
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : "Failed to publish listing.";
             throw new Error(errorMessage);
