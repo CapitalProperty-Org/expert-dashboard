@@ -31,7 +31,7 @@ const SidebarContent = () => {
         { label: 'Listings Settings', href: '/listings-settings', icon: Settings },
       ]
     },
- {
+    {
       label: 'Leads', href: '#', icon: Users,
       children: [
         { label: 'Leads received', href: '/leads-management', icon: Inbox },
@@ -40,27 +40,27 @@ const SidebarContent = () => {
     },
     { label: 'Transactions', href: '/transactions', icon: FileText },
     { label: 'Community Top Spot', href: '/community-top-spot', icon: Landmark },
- {
+    {
       label: 'Contracts & Payments', href: '#', icon: Handshake,
       children: [
         { label: 'Contracts', href: '/contracts', icon: FileText },
-        { label: 'Payments', href: '/payments', icon: FileText }, 
+        { label: 'Payments', href: '/payments', icon: FileText },
       ]
-    },    
- {
+    },
+    {
       label: 'Credits', href: '#', icon: Handshake,
       children: [
         { label: 'Credit Usage History', href: '/credit-usage-history', icon: FileText },
-        { label: 'Credit Returns', href: '/credit-returns', icon: Gift }, 
+        { label: 'Credit Returns', href: '/credit-returns', icon: Gift },
       ]
-    },    
- {
+    },
+    {
       label: 'Users & Roles', href: '#', icon: Users2Icon,
       children: [
         { label: 'Users', href: '/users', icon: Users2Icon },
         { label: 'Roles & Permissions', href: '/roles-permissions', icon: Shield },
       ]
-    },  
+    },
     { label: 'Security', href: '/security', icon: Shield },
     { label: 'Notifications', href: '/notifications', icon: Bell }, // <-- تحديث الرابط
     { label: 'PF Academy', href: '#', icon: GraduationCap },
@@ -84,7 +84,7 @@ const SidebarContent = () => {
         </div>
         <CreditsStatus />
         <div className="p-4 border-t border-gray-200 space-y-2">
-          <a href="http://localhost:3000" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-3 text-sm text-gray-600 hover:text-gray-900">
+          <a href="https://164.92.174.127.nip.io" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-3 text-sm text-gray-600 hover:text-gray-900">
             <ExternalLink size={20} />
             <span>Back to Website</span>
           </a>
