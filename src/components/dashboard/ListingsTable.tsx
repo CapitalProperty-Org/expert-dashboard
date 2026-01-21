@@ -94,10 +94,13 @@ const ListingsTable = ({ listings, isSelectionMode, selectedIds, onSelectionChan
                                 <th
                                     key={header}
                                     scope="col"
-                                    className={`px-6 py-3 text-left text-xs font-semibold text-gray-600 whitespace-nowrap ${index === 0
-                                        ? `sticky z-20 bg-gray-50 ${isSelectionMode ? 'left-[48px]' : 'left-0'} shadow-[4px_0_12px_-2px_rgba(0,0,0,0.08)] border-r border-gray-200/50`
-                                        : ''
+                                    className={`px-6 py-3 text-left text-xs font-semibold text-gray-600 whitespace-nowrap ${index === 0 || header === "Listing Reference"
+                                        ? `sticky z-20 bg-gray-50 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.08)] border-r border-gray-200/50`
+                                        : header === 'Action'
+                                            ? 'sticky right-0 z-20 bg-gray-50 shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.08)] border-l border-gray-200/50'
+                                            : ''
                                         }`}
+                                    style={index === 0 || header === "Listing Reference" ? { left: isSelectionMode ? '48px' : '0' } : {}}
                                 >
                                     {header}
                                 </th>
@@ -118,9 +121,11 @@ const ListingsTable = ({ listings, isSelectionMode, selectedIds, onSelectionChan
                                     </td>
                                 )}
                                 <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 ${true // Always first column (Reference)
-                                    ? `sticky z-20 bg-white group-hover:bg-gray-50 ${isSelectionMode ? 'left-[48px]' : 'left-0'} shadow-[4px_0_12px_-2px_rgba(0,0,0,0.08)] border-r border-gray-100 transition-colors`
+                                    ? `sticky z-20 bg-white group-hover:bg-gray-50 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.08)] border-r border-gray-100 transition-colors`
                                     : ''
-                                    }`}>
+                                    }`}
+                                    style={{ left: isSelectionMode ? '48px' : '0' }}
+                                >
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => handleCopy(listing.reference)}
@@ -176,7 +181,7 @@ const ListingsTable = ({ listings, isSelectionMode, selectedIds, onSelectionChan
                                     </>
                                 )}
 
-                                <td className="px-6 py-4 whitespace-nowrap text-center relative">
+                                <td className="px-6 py-4 whitespace-nowrap text-center sticky right-0 z-20 bg-white shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.08)] border-l border-gray-100 group-hover:bg-gray-50 transition-colors">
                                     <ActionMenu
                                         listingId={listing.id}
                                         onActionComplete={onActionComplete}

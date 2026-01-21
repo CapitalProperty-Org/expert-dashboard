@@ -292,7 +292,7 @@ const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
                                         ) : (
                                             <>
                                                 {/* Performance Metrics */}
-                                                {!['draft', 'pending_publishing'].includes(listing.state?.type) && (
+                                                {!['draft', 'pending_publishing', 'archived'].includes(listing.state?.type || '') && (listing.state as any)?.stage !== 'archived' && (
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="bg-gray-50 p-4 rounded-lg">
                                                             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider block mb-1">Impressions</span>
@@ -336,7 +336,7 @@ const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
                                 )}
                                 {activeTab === 'insights' && (
                                     <div className="space-y-6">
-                                        {!['draft', 'pending_publishing'].includes(listing.state?.type) && (
+                                        {!['draft', 'pending_publishing', 'archived'].includes(listing.state?.type || '') && (listing.state as any)?.stage !== 'archived' && (
                                             <>
                                                 {/* Performance Funnel Card */}
                                                 <div className="bg-white rounded-lg border shadow-sm p-5">

@@ -196,6 +196,7 @@ const QualityScoreCircle = ({ score, qualityScore }: QualityScoreCircleProps) =>
       theme="light"
       maxWidth={350}
       offset={[0, 10]}
+      appendTo={document.body}
     >
       <div className="relative h-12 w-12 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
         <svg className="w-full h-full" viewBox="0 0 40 40">

@@ -387,15 +387,32 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
     const menuContent = (
         <div className="w-48 bg-white rounded-md shadow-sm">
             <div className="py-1">
-                {canEdit && listingData?.state?.type === 'draft' && (
-                    <button
-                        onClick={() => handleAction('publish')}
-                        disabled={isLoading}
-                        className={`w-full text-left flex items-center gap-2 px-4 py-2 text-sm ${getActionColor('publish')} disabled:opacity-50`}
-                    >
-                        {getActionIcon('publish')}
-                        {getActionLabel('publish')}
-                    </button>
+                {canEdit && (listingData?.state?.stage === 'draft' || listingData?.state?.stage === 'archived') && (
+                    <>
+                        {/* Check for completeness: price, location, images, type, category */}
+                        {(() => {
+                            const hasPrice = listingData?.price?.amounts?.sale || listingData?.price?.amounts?.yearly || listingData?.price?.amounts?.monthly;
+                            const hasLocation = listingData?.location?.name;
+                            const hasImages = listingData?.images && listingData.images.length > 0;
+                            const hasType = listingData?.type;
+                            const hasCategory = listingData?.category;
+
+                            const isComplete = hasPrice && hasLocation && hasImages && hasType && hasCategory;
+
+                            if (!isComplete) return null;
+
+                            return (
+                                <button
+                                    onClick={() => handleAction('publish')}
+                                    disabled={isLoading}
+                                    className={`w-full text-left flex items-center gap-2 px-4 py-2 text-sm ${getActionColor('publish')} disabled:opacity-50`}
+                                >
+                                    {getActionIcon('publish')}
+                                    {getActionLabel('publish')}
+                                </button>
+                            );
+                        })()}
+                    </>
                 )}
                 {canEdit && listingData?.state?.stage === 'live' && (
                     <button
@@ -452,6 +469,18 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                 theme="light"
                 animation="fade"
                 offset={[0, 4]} // Offset to match previous margin top
+                appendTo={document.body}
+                popperOptions={{
+                    strategy: 'fixed',
+                    modifiers: [
+                        {
+                            name: 'preventOverflow',
+                            options: {
+                                boundary: 'window',
+                            },
+                        },
+                    ],
+                }}
             >
                 <button
                     onClick={() => setVisible(!visible)}

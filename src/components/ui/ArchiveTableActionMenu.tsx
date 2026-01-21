@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MoreHorizontal, Edit2, Eye, Trash2, Copy } from 'lucide-react';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
+import 'tippy.js/themes/light.css';
 import axios from 'axios';
 import { useConfirmationModal } from '../../hooks/useConfirmationModal';
 import { useListings } from '../../context/ListingsContext';
@@ -77,33 +80,57 @@ const ArchiveTableActionMenu = ({ listingId, onActionComplete, reference }: Arch
         });
     };
 
+    const menuContent = (
+        <div className="w-48">
+            <ul className="py-1">
+                <li>
+                    <button className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        <Edit2 size={16} /> Edit
+                    </button>
+                </li>
+                <li>
+                    <button onClick={confirmUnarchive} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        <Eye size={16} /> Unarchive
+                    </button>
+                </li>
+                <li>
+                    <button onClick={confirmDelete} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                        <Trash2 size={16} /> Delete
+                    </button>
+                </li>
+            </ul>
+        </div>
+    );
+
     return (
         <>
-            <div className="relative" ref={menuRef}>
-                <button onClick={() => setIsOpen(!isOpen)} className="p-2 rounded-full text-gray-500 hover:bg-gray-100 focus:outline-none">
-                    <MoreHorizontal size={20} />
-                </button>
-                {isOpen && (
-                    <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                        <ul className="py-1">
-                            <li>
-                                <button className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <Edit2 size={16} /> Edit
-                                </button>
-                            </li>
-                            <li>
-                                <button onClick={confirmUnarchive} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <Eye size={16} /> Unarchive
-                                </button>
-                            </li>
-                            <li>
-                                <button onClick={confirmDelete} className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                    <Trash2 size={16} /> Delete
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                )}
+            <div className="relative">
+                <Tippy
+                    content={menuContent}
+                    visible={isOpen}
+                    onClickOutside={() => setIsOpen(false)}
+                    interactive={true}
+                    placement="bottom-end"
+                    theme="light"
+                    animation="fade"
+                    offset={[0, 4]}
+                    appendTo={document.body}
+                    popperOptions={{
+                        strategy: 'fixed',
+                        modifiers: [
+                            {
+                                name: 'preventOverflow',
+                                options: {
+                                    boundary: 'window',
+                                },
+                            },
+                        ],
+                    }}
+                >
+                    <button onClick={() => setIsOpen(!isOpen)} className="p-2 rounded-full text-gray-500 hover:bg-gray-100 focus:outline-none">
+                        <MoreHorizontal size={20} />
+                    </button>
+                </Tippy>
             </div>
             {ConfirmationModalComponent}
 

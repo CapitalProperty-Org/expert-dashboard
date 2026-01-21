@@ -60,8 +60,13 @@ const ArchiveTable = ({ listings, onActionComplete, onReferenceClick }: ArchiveT
                 <table className="min-w-full w-full">
                     <thead className="bg-gray-50/50">
                         <tr className="border-b border-gray-200/80">
-                            {tableHeaders.map((header) => (
-                                <th key={header} scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">
+                            {tableHeaders.map((header, index) => (
+                                <th key={header} scope="col" className={`px-6 py-3 text-left text-xs font-semibold text-gray-600 whitespace-nowrap ${index === 0
+                                    ? 'sticky left-0 z-20 bg-gray-50 shadow-[4px_0_12px_-2px_rgba(0,0,0,0.08)] border-r border-gray-200/50'
+                                    : header === 'Action'
+                                        ? 'sticky right-0 z-20 bg-gray-50 shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.08)] border-l border-gray-200/50'
+                                        : ''
+                                    }`}>
                                     {header}
                                 </th>
                             ))}
@@ -70,7 +75,7 @@ const ArchiveTable = ({ listings, onActionComplete, onReferenceClick }: ArchiveT
                     <tbody className="bg-white">
                         {listings?.map((listing) => (
                             <tr key={listing.id} className="border-b last:border-b-0 hover:bg-gray-50/50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 sticky left-0 z-20 bg-white shadow-[4px_0_12px_-2px_rgba(0,0,0,0.08)] border-r border-gray-100">
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => handleCopy(listing.reference)}
@@ -95,8 +100,8 @@ const ArchiveTable = ({ listings, onActionComplete, onReferenceClick }: ArchiveT
                                 <td className="px-6 py-4 text-sm text-gray-600 truncate max-w-xs">{listing.location?.name}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                                     <span className={`px-2 py-1 rounded-full text-xs font-semibold ${listing.exposure === 'Premium' ? 'bg-orange-100 text-orange-700' :
-                                            listing.exposure === 'Featured' ? 'bg-violet-100 text-violet-700' :
-                                                'bg-gray-100 text-gray-700'
+                                        listing.exposure === 'Featured' ? 'bg-violet-100 text-violet-700' :
+                                            'bg-gray-100 text-gray-700'
                                         }`}>
                                         {listing.exposure || 'Standard'}
                                     </span>
@@ -108,7 +113,7 @@ const ArchiveTable = ({ listings, onActionComplete, onReferenceClick }: ArchiveT
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">{listing.leads_received || 0}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">{listing.impressions || 0}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">{listing.listing_clicks || 0}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">{listing.clicks || 0}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">{listing.ctr ? `${listing.ctr}%` : '0%'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 text-center">{listing.lead_clicks || 0}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -138,7 +143,7 @@ const ArchiveTable = ({ listings, onActionComplete, onReferenceClick }: ArchiveT
                                     {formatLastUpdated(listing.updated_at)}
                                 </td>
                                 {/* 3. إضافة `relative` هنا أمر حاسم لجعل القائمة المنسدلة تظهر بالنسبة لهذه الخلية */}
-                                <td className="px-6 py-4 whitespace-nowrap text-center relative">
+                                <td className="px-6 py-4 whitespace-nowrap text-center sticky right-0 z-20 bg-white shadow-[-4px_0_12px_-2px_rgba(0,0,0,0.08)] border-l border-gray-100">
                                     <ArchiveTableActionMenu listingId={listing.id} onActionComplete={onActionComplete} reference={listing.reference} />
                                 </td>
                             </tr>

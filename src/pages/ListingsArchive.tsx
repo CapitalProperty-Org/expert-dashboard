@@ -91,7 +91,7 @@ const ListingsArchive = () => {
             )}
 
             <div className="flex flex-col h-full bg-gray-50">
-                <div className="p-4 sm:p-6 md:p-8 space-y-4 lg:space-y-6 bg-gray-50 flex-shrink-0 z-10">
+                <div className="p-4 sm:p-6 md:p-8 space-y-4 lg:space-y-6 bg-gray-50 flex-shrink-0 z-30">
                     <h1 className="text-2xl font-bold text-gray-800">Listings Archive {pagination && `(${pagination.total})`}</h1>
                     <div className="space-y-4">
                         <div className="relative w-full">
@@ -113,7 +113,7 @@ const ListingsArchive = () => {
                                     <span className="hidden lg:inline">{currentSortLabel}</span>
                                 </button>
                                 {isSortOpen &&
-                                    <div className="absolute top-full mt-2 w-56 bg-white rounded-md shadow-lg border z-20">
+                                    <div className="absolute top-full mt-2 w-56 bg-white rounded-md shadow-lg border z-50">
                                         <ul className="py-1">
                                             {sortOptions.map(opt => (
                                                 <li key={opt.label}>

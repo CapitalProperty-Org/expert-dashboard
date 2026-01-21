@@ -496,7 +496,7 @@ const ListingsManagement = () => {
             )}
 
             <div className="flex flex-col h-full bg-gray-50">
-                <div className="p-4 sm:p-6 md:p-8 space-y-4 lg:space-y-6 bg-gray-50 flex-shrink-0 z-10">
+                <div className="p-4 sm:p-6 md:p-8 space-y-4 lg:space-y-6 bg-gray-50 flex-shrink-0 z-30">
                     <div className="hidden lg:flex flex-wrap gap-y-4 items-center justify-between">
                         <h1 className="text-2xl font-bold text-black">Listings Management {pagination && `(${pagination.total})`}</h1>
                         <div className="flex items-center gap-4">
@@ -533,7 +533,7 @@ const ListingsManagement = () => {
                                         <span className="hidden lg:inline">{currentSortLabel}</span>
                                     </button>
                                     {isSortOpen &&
-                                        <div className="absolute top-full mt-2 w-56 bg-white rounded-md shadow-lg border z-20">
+                                        <div className="absolute top-full mt-2 w-56 bg-white rounded-md shadow-lg border z-50">
                                             <ul className="py-1">
                                                 {sortOptions.map(opt => (
                                                     <li key={opt.label}>
