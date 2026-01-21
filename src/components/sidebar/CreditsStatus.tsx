@@ -100,7 +100,7 @@ const CreditsStatus = () => {
       </div>
 
       {/* Additional Info */}
-      <div className="mt-3 text-xs text-gray-500 space-y-1">
+      {/* <div className="mt-3 text-xs text-gray-500 space-y-1">
         <div className="flex justify-between">
           <span>Total:</span>
           <span>{balance.total_credits}</span>
@@ -113,7 +113,7 @@ const CreditsStatus = () => {
           <span>Cycle:</span>
           <span>{new Date(balance.cycle.start_date).toLocaleDateString()} - {new Date(balance.cycle.end_date).toLocaleDateString()}</span>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

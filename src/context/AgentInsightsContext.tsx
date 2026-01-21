@@ -14,6 +14,18 @@ export interface AgentData {
     transactionsCount: number;
     ratingAverage: number;
     responseRate: number;
+    // New fields
+    listingQuality: number;
+    listingQualityPoints: number;
+    livePropertiesPoints: number;
+    claimTransactions: number;
+    claimTransactionPoints: number;
+    superAgentStreakWeeks: number;
+    superAgentStreakPoints: number;
+    whatsappResponseTime: string;
+    whatsappResponsePoints: number;
+    responseRatePoints: number;
+    agentScore: number;
 }
 
 export interface Criterion {
