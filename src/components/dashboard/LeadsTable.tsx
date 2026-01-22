@@ -4,7 +4,7 @@ import type { Lead } from '../../context/LeadsContext';
 import { Link } from 'react-router-dom';
 
 interface LeadsTableProps {
-    leads: Lead[];
+  leads: Lead[];
 }
 
 const tableHeaders = ["Lead Details", "Created", "Assigned to", "Type", "Status", ""];
@@ -32,7 +32,6 @@ const LeadsTable = ({ leads }: LeadsTableProps) => {
                     <p className="text-sm font-semibold">{lead.fullName}</p>
                     <p className="text-sm text-gray-500">{lead.mobile}</p>
                     <p className="text-sm text-gray-500">{lead.email}</p>
-                    <p className="text-xs text-gray-400 mt-1">ID: {lead.id}</p>
                   </div>
                 </div>
               </td>
@@ -47,11 +46,11 @@ const LeadsTable = ({ leads }: LeadsTableProps) => {
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-600 capitalize">{lead.status}</td>
               <td className="px-6 py-4 whitespace-nowrap text-right">
-<Link to={`/leads/${lead.id}`}>
-              <button className="text-sm bg-white border border-violet-600 text-violet-600 font-semibold py-2 px-4 rounded-md hover:bg-violet-50">
-                Lead Details
-              </button>
-            </Link>              </td>
+                <Link to={`/leads/${lead.id}`}>
+                  <button className="text-sm bg-white border border-violet-600 text-violet-600 font-semibold py-2 px-4 rounded-md hover:bg-violet-50">
+                    Lead Details
+                  </button>
+                </Link>              </td>
             </tr>
           ))}
         </tbody>

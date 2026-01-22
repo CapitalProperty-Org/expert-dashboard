@@ -1,13 +1,16 @@
 import axios from 'axios';
 import AsyncSelect from 'react-select/async';
 import type { SelectOption } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 
 interface LocationAutocompleteProps {
     value: SelectOption | null;
     onChange: (value: SelectOption | null) => void;
 }
 
+
 const LocationAutocomplete = ({ value, onChange }: LocationAutocompleteProps) => {
+    const { token } = useAuth();
 
     const loadOptions = (
         inputValue: string,
@@ -21,13 +24,21 @@ const LocationAutocomplete = ({ value, onChange }: LocationAutocompleteProps) =>
         // استخدام setTimeout لتأخير الطلب (debounce)
         setTimeout(async () => {
             try {
+                console.log('Searching for location:', inputValue);
                 const response = await axios.get(
-                    `${import.meta.env.VITE_BASE_URL}/api/location-tree/search/autocomplete?keyword=${inputValue}&limit_by_city=50`
+                    `${import.meta.env.VITE_BASE_URL}/api/location-tree/search/autocomplete?keyword=${inputValue}&limit_by_city=50`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
                 );
+                console.log('Location API Response:', response.data);
                 const options = response.data.data.map((loc: { id: number; title: string }) => ({
                     value: loc.id,
                     label: loc.title,
                 }));
+                console.log('Mapped Options:', options);
                 callback(options);
             } catch (error) {
                 console.error("Failed to fetch locations", error);
@@ -76,7 +87,7 @@ const LocationAutocomplete = ({ value, onChange }: LocationAutocompleteProps) =>
             ...provided,
             borderRadius: '0.5rem',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-            zIndex: 50,
+            zIndex: 9999,
         })
     };
 
@@ -85,13 +96,18 @@ const LocationAutocomplete = ({ value, onChange }: LocationAutocompleteProps) =>
             isMulti={false}
             cacheOptions
             loadOptions={loadOptions}
-            defaultOptions
+            defaultOptions={false}
             value={value}
             onChange={handleChange}
-            placeholder="Search and select locations..."
+            placeholder="Search location (e.g. Dubai Marina)..."
             className="react-select-container shadow-sm"
             classNamePrefix="react-select"
             styles={customStyles}
+            menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+            menuPosition="fixed"
+            noOptionsMessage={({ inputValue }) =>
+                !inputValue || inputValue.length < 2 ? "Type at least 2 characters..." : "No locations found"
+            }
         />
     );
 };

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import L from 'leaflet';
 
 const SIDEBAR_DATA = {
     rankings: {
@@ -38,6 +39,56 @@ const SIDEBAR_DATA = {
             isOpen: false
         }
     ]
+};
+
+// Dubai Community Coordinates Mapping (Fallback)
+const DUBAI_COMMUNITY_COORDS: Record<string, { lat: number; lng: number }> = {
+    'Dubai Marina': { lat: 25.0887, lng: 55.1465 },
+    'Downtown Dubai': { lat: 25.1972, lng: 55.2744 },
+    'Jumeirah': { lat: 25.2854, lng: 55.2639 },
+    'Palm Jumeirah': { lat: 25.1124, lng: 55.1493 },
+    'Business Bay': { lat: 25.1891, lng: 55.2756 },
+    'Dubai Hills Estate': { lat: 25.1134, lng: 55.2484 },
+    'Arabian Ranches': { lat: 25.0707, lng: 55.1484 },
+    'Emirates Hills': { lat: 25.0848, lng: 55.1423 },
+    'Dubai Land': { lat: 25.0083, lng: 55.3053 },
+    'The Springs': { lat: 25.0574, lng: 55.1810 },
+    'The Meadows': { lat: 25.0465, lng: 55.1734 },
+    'Jumeirah Park': { lat: 25.0481, lng: 55.1544 },
+    'Jumeirah Village Circle': { lat: 25.0488, lng: 55.2065 },
+    'Jumeirah Village Triangle': { lat: 25.0366, lng: 55.1767 },
+    'Dubai Sports City': { lat: 25.0709, lng: 55.2160 },
+    'Motor City': { lat: 25.0710, lng: 55.2210 },
+    'International City': { lat: 25.0167, lng: 55.3378 },
+    'Al Barsha': { lat: 25.0866, lng: 55.2319 },
+    'Deira': { lat: 25.2654, lng: 55.3138 },
+    'Bur Dubai': { lat: 25.2808, lng: 55.2938 },
+    'Ras Al Khaimah': { lat: 25.7482, lng: 55.9408 },
+    'Sharjah': { lat: 25.3571, lng: 55.3986 },
+    'Ajman': { lat: 25.4167, lng: 55.4500 },
+    'Fujairah': { lat: 25.1242, lng: 56.3529 },
+    'Umm Al Quwain': { lat: 25.5649, lng: 55.5517 },
+    // Add fallbacks for common variations
+    'dubai': { lat: 25.2048, lng: 55.2708 },
+    'abudhabi': { lat: 24.4539, lng: 54.3773 }
+};
+
+const getCoordinatesForCommunity = (communityName: string): { lat: number; lng: number } => {
+    // Try exact match first
+    if (DUBAI_COMMUNITY_COORDS[communityName]) {
+        return DUBAI_COMMUNITY_COORDS[communityName];
+    }
+
+    // Try case-insensitive partial match
+    const lowerName = communityName.toLowerCase().trim();
+    for (const [key, coords] of Object.entries(DUBAI_COMMUNITY_COORDS)) {
+        if (key.toLowerCase().includes(lowerName) || lowerName.includes(key.toLowerCase())) {
+            return coords;
+        }
+    }
+
+    // Default to Dubai center
+    return { lat: 25.2048, lng: 55.2708 };
 };
 
 // --- Sub-Components ---
@@ -98,6 +149,8 @@ interface CommunityStats {
     leads: number;
     lpl: number;
     image?: string;
+    lat?: number;
+    lng?: number;
 }
 
 const CommunityAnalysis = () => {
@@ -105,15 +158,39 @@ const CommunityAnalysis = () => {
     const [selectedCommunity, setSelectedCommunity] = useState<number | null>(null);
     const [communityData, setCommunityData] = useState<CommunityStats[]>([]);
     const [loading, setLoading] = useState(true);
+    const mapRef = useRef<L.Map | null>(null);
+    const markersRef = useRef<L.Marker[]>([]);
 
     useEffect(() => {
         const fetchCommunities = async () => {
             try {
-                // Fetch real data from the backend
+                // Fetch community stats from the backend
+                // This payload now includes lat/lng from the updated overview service
                 const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/overview/communities`);
-                setCommunityData(response.data);
-                if (response.data.length > 0) {
-                    setSelectedCommunity(response.data[0].id); // Default select first
+
+                // Process data to ensure unique IDs and valid coordinates
+                const dataWithCoords = response.data.map((community: CommunityStats, index: number) => {
+                    // Ensure unique ID if missing
+                    const cId = community.id || index + 1;
+
+                    // If backend provided coordinates, use them
+                    if (community.lat && community.lng) {
+                        return { ...community, id: cId };
+                    }
+
+                    // Fallback to local coordinate lookup if backend is missing data
+                    const coords = getCoordinatesForCommunity(community.name);
+                    return {
+                        ...community,
+                        id: cId,
+                        lat: coords.lat,
+                        lng: coords.lng
+                    };
+                });
+
+                setCommunityData(dataWithCoords);
+                if (dataWithCoords.length > 0) {
+                    setSelectedCommunity(dataWithCoords[0].id); // Default select first
                 }
             } catch (error) {
                 console.error("Failed to fetch community data", error);
@@ -125,13 +202,115 @@ const CommunityAnalysis = () => {
         fetchCommunities();
     }, []);
 
-    // Placeholder Map View
-    const MapView = () => (
-        <div className="flex items-center justify-center bg-gray-100 rounded-lg h-[400px] text-gray-400 flex-col gap-2">
-            <div className="text-4xl">🗺️</div>
-            <p className="font-medium text-sm">Interactive Map Coming Soon</p>
-        </div>
-    );
+    // Initialize map when viewMode is 'map'
+    useEffect(() => {
+        // Only run if in map mode and data is loaded
+        if (viewMode !== 'map' || communityData.length === 0) return;
+
+        const mapContainerId = 'map-container';
+        const mapContainer = document.getElementById(mapContainerId);
+        if (!mapContainer) return;
+
+        // Cleanup existing map
+        if (mapRef.current) {
+            mapRef.current.remove();
+            mapRef.current = null;
+            markersRef.current = [];
+        }
+
+        // Determine initial center
+        let initialCenter: [number, number] = [25.2048, 55.2708]; // Dubai Default
+        let initialZoom = 11;
+
+        if (selectedCommunity) {
+            const selected = communityData.find(c => c.id === selectedCommunity);
+            if (selected && selected.lat && selected.lng) {
+                initialCenter = [selected.lat, selected.lng];
+                initialZoom = 13;
+            }
+        }
+
+        // Create Map
+        const map = L.map(mapContainerId).setView(initialCenter, initialZoom);
+        mapRef.current = map;
+
+        // Add Tile Layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add Markers for ALL communities
+        communityData.forEach(community => {
+            if (community.lat && community.lng) {
+                const marker = L.marker([community.lat, community.lng])
+                    .addTo(map)
+                    .bindPopup(`
+                        <div class="text-center">
+                            <strong>${community.name}</strong><br/>
+                            Listings: ${community.listings}<br/>
+                            Leads: ${community.leads}
+                        </div>
+                    `);
+
+                // Add click handler to select community on click
+                marker.on('click', () => {
+                    setSelectedCommunity(community.id);
+                });
+
+                markersRef.current.push(marker);
+
+                // Open popup if selected
+                if (community.id === selectedCommunity) {
+                    marker.openPopup();
+                }
+            }
+        });
+
+        // Cleanup
+        return () => {
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+                markersRef.current = [];
+            }
+        };
+    }, [viewMode, communityData]); // Re-initialize if data or mode changes. Note: We handle selection change separately?
+    // Actually, reconstructing the map on every selection change is bad UX (flicker).
+    // Better to handle selection change separately.
+
+    // Effect to update map view when selectedCommunity changes WITHOUT destroying map
+    useEffect(() => {
+        if (viewMode === 'map' && mapRef.current && selectedCommunity) {
+            const selected = communityData.find(c => c.id === selectedCommunity);
+            if (selected && selected.lat && selected.lng) {
+                mapRef.current.flyTo([selected.lat, selected.lng], 13, {
+                    animate: true,
+                    duration: 1.5
+                });
+
+                // Find and open popup
+                // Note: We don't have easy reference to markers by ID unless we store them mapped. 
+                // But since we re-render map on viewMode change, it's ok.
+                // Ideally we should store markers in a Map<id, marker>.
+            }
+        }
+    }, [selectedCommunity, viewMode, communityData]);
+
+
+    // Map View Component
+    const MapView = () => {
+        return (
+            <div
+                id="map-container"
+                style={{
+                    width: '100%',
+                    height: '400px',
+                    borderRadius: '8px',
+                    zIndex: 0
+                }}
+            />
+        );
+    };
 
     const selectedData = communityData.find(c => c.id === selectedCommunity);
 
@@ -225,14 +404,12 @@ const CommunityAnalysis = () => {
                 </div>
 
                 {/* RIGHT COLUMN: Sidebar Details (35%) */}
-                {/* Always show if data exists (or if something is selected), no close button */}
                 {selectedData && (
                     <div className="w-full lg:w-[35%] bg-white rounded-xl shadow-lg border border-gray-200 flex flex-col h-auto sticky top-20">
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                             <h3 className="text-lg font-bold text-gray-900">
                                 {selectedData.name}
                             </h3>
-                            {/* Close Button REMOVED as per request */}
                         </div>
 
                         <div className="p-5 overflow-y-auto max-h-[800px] scrollbar-thin scrollbar-thumb-gray-200">

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 import axios from 'axios';
 import { Home, Building, DollarSign, Bed, Bath, Armchair, MapPin, Calendar, Clock, CheckSquare } from 'lucide-react';
 import * as LeadData from '../../../data/newLeadData';
-import FormLabel from '../../ui/FormLabel';
+import FormLabel from '../../ui/FormLabelLead';
 import MultiSelectButtonGroup from '../../ui/MultiSelectButtonGroup';
 import CustomSelect from '../../ui/CustomSelect';
 import SegmentedControl from '../../ui/SegmentedControl';
@@ -244,18 +245,18 @@ const Requirements = ({ leadData, handleStateUpdate, handleButtonGroupToggle }: 
             <FormRow>
                 <FormLabel icon={<Home />} text="Property size, sqft" />
                 <div className="col-span-3 flex items-center gap-2">
-                    <input 
-                        placeholder="From" 
-                        value={leadData.sizeFrom} 
-                        onChange={e => handleStateUpdate('sizeFrom', e.target.value)} 
-                        className={`w-full p-2.5 border rounded-lg ${leadData.sizeFrom && leadData.sizeTo && !validateRange(leadData.sizeFrom, leadData.sizeTo) ? 'border-red-500' : ''}`} 
+                    <input
+                        placeholder="From"
+                        value={leadData.sizeFrom}
+                        onChange={e => handleStateUpdate('sizeFrom', e.target.value)}
+                        className={`w-full p-2.5 border rounded-lg bg-white ${leadData.sizeFrom && leadData.sizeTo && !validateRange(leadData.sizeFrom, leadData.sizeTo) ? 'border-red-500' : ''}`}
                     />
                     <span className="text-gray-400">-</span>
-                    <input 
-                        placeholder="To" 
-                        value={leadData.sizeTo} 
-                        onChange={e => handleStateUpdate('sizeTo', e.target.value)} 
-                        className={`w-full p-2.5 border rounded-lg ${leadData.sizeFrom && leadData.sizeTo && !validateRange(leadData.sizeFrom, leadData.sizeTo) ? 'border-red-500' : ''}`} 
+                    <input
+                        placeholder="To"
+                        value={leadData.sizeTo}
+                        onChange={e => handleStateUpdate('sizeTo', e.target.value)}
+                        className={`w-full p-2.5 border rounded-lg bg-white ${leadData.sizeFrom && leadData.sizeTo && !validateRange(leadData.sizeFrom, leadData.sizeTo) ? 'border-red-500' : ''}`}
                     />
                 </div>
                 {leadData.sizeFrom && leadData.sizeTo && !validateRange(leadData.sizeFrom, leadData.sizeTo) && (
@@ -265,31 +266,31 @@ const Requirements = ({ leadData, handleStateUpdate, handleButtonGroupToggle }: 
             <FormRow>
                 <FormLabel icon={<DollarSign />} text="Property price (AED)" />
                 <div className="col-span-3 flex items-center gap-2">
-                    <input 
-                        placeholder="From" 
-                        value={leadData.priceFrom} 
-                        onChange={e => handleStateUpdate('priceFrom', e.target.value)} 
-                        className={`w-full p-2.5 border rounded-lg ${leadData.priceFrom && leadData.priceTo && !validateRange(leadData.priceFrom, leadData.priceTo) ? 'border-red-500' : ''}`} 
+                    <input
+                        placeholder="From"
+                        value={leadData.priceFrom}
+                        onChange={e => handleStateUpdate('priceFrom', e.target.value)}
+                        className={`w-full p-2.5 border rounded-lg bg-white ${leadData.priceFrom && leadData.priceTo && !validateRange(leadData.priceFrom, leadData.priceTo) ? 'border-red-500' : ''}`}
                     />
                     <span className="text-gray-400">-</span>
-                    <input 
-                        placeholder="To" 
-                        value={leadData.priceTo} 
-                        onChange={e => handleStateUpdate('priceTo', e.target.value)} 
-                        className={`w-full p-2.5 border rounded-lg ${leadData.priceFrom && leadData.priceTo && !validateRange(leadData.priceFrom, leadData.priceTo) ? 'border-red-500' : ''}`} 
+                    <input
+                        placeholder="To"
+                        value={leadData.priceTo}
+                        onChange={e => handleStateUpdate('priceTo', e.target.value)}
+                        className={`w-full p-2.5 border rounded-lg bg-white ${leadData.priceFrom && leadData.priceTo && !validateRange(leadData.priceFrom, leadData.priceTo) ? 'border-red-500' : ''}`}
                     />
                 </div>
                 {leadData.priceFrom && leadData.priceTo && !validateRange(leadData.priceFrom, leadData.priceTo) && (
                     <div className="col-span-4 text-red-500 text-sm mt-1">Price "From" must be less than or equal to "To"</div>
                 )}
             </FormRow>
-            
+
             {isResidential && <FormRow><FormLabel icon={<Bed />} text="Number of bedrooms" /><MultiSelectButtonGroup options={LeadData.bedroomsOptions} selected={leadData.bedrooms} onToggle={(opt) => handleButtonGroupToggle('bedrooms', opt)} /></FormRow>}
             {isResidential && <FormRow><FormLabel icon={<Bath />} text="Number of bathrooms" /><MultiSelectButtonGroup options={LeadData.bathroomsOptions} selected={leadData.bathrooms} onToggle={(opt) => handleButtonGroupToggle('bathrooms', opt)} /></FormRow>}
             {isResidential && <FormRow><FormLabel icon={<Armchair />} text="Furnishing type" /><MultiSelectButtonGroup options={LeadData.furnishingOptions} selected={leadData.furnishingType} onToggle={(opt) => handleButtonGroupToggle('furnishingType', opt)} /></FormRow>}
-            
-            <FormRow><FormLabel icon={<MapPin />} text="Preferred locations" /><div className="col-span-3"><LocationAutocomplete value={leadData.preferredLocations} onChange={(value) => handleStateUpdate('preferredLocations', value)} /></div></FormRow>            
-            
+
+            <FormRow><FormLabel icon={<MapPin />} text="Preferred locations" /><div className="col-span-3"><LocationAutocomplete value={leadData.preferredLocations} onChange={(value) => handleStateUpdate('preferredLocations', value)} /></div></FormRow>
+
             {isBuyer ? (
                 <>
                     <FormRow><FormLabel icon={<Calendar />} text="Readiness to buy" /><MultiSelectButtonGroup options={LeadData.readinessOptions} selected={leadData.readinessToBuy} onToggle={(opt) => handleButtonGroupToggle('readinessToBuy', opt)} /></FormRow>
@@ -301,15 +302,41 @@ const Requirements = ({ leadData, handleStateUpdate, handleButtonGroupToggle }: 
         </div>
     );
 };
+
+
 export const LeadDetailsForm = ({ leadData, setLeadData }: any) => {
     const [agents, setAgents] = useState([]);
     const [selectedCountryCode, setSelectedCountryCode] = useState(leadData.phoneCode || '+971');
-    
-    useEffect(() => {
-        axios.get(`${import.meta.env.VITE_BASE_URL}/api/users`).then(res => setAgents(res.data.map((u: any) => ({ label: `${u.first_name} ${u.last_name}`, value: u.id }))));
-    }, []);
+    const { token } = useAuth();
 
-    const statusOptions = ["New", "Prospect", "Visit in progress", "Qualified", "Contract sent", "Contract signed", "Not ready", "Not interested", "Called no reply"].map(s => ({label: s, value: s.toLowerCase().replace(/ /g, '_')}));
+    useEffect(() => {
+        const fetchAgents = async () => {
+            try {
+                const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/users`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                if (Array.isArray(res.data)) {
+                    setAgents(res.data.map((u: any) => ({ label: `${u.first_name} ${u.last_name}`, value: u.id })));
+                } else if (res.data && Array.isArray(res.data.data)) {
+                    // Handle potential paginated response structure just in case, though controller returns array usually
+                    setAgents(res.data.data.map((u: any) => ({ label: `${u.first_name} ${u.last_name}`, value: u.id })));
+                } else {
+                    console.error("Unexpected response format for agents:", res.data);
+                    setAgents([]);
+                }
+            } catch (error) {
+                console.error("Failed to fetch agents:", error);
+            }
+        };
+
+        if (token) {
+            fetchAgents();
+        }
+    }, [token]);
+
+    const statusOptions = ["New", "Prospect", "Visit in progress", "Qualified", "Contract sent", "Contract signed", "Not ready", "Not interested", "Called no reply"].map(s => ({ label: s, value: s.toLowerCase().replace(/ /g, '_') }));
 
     const handleChange = (key: string, value: any) => {
         setLeadData((prev: any) => ({ ...prev, [key]: value }));
@@ -325,20 +352,20 @@ export const LeadDetailsForm = ({ leadData, setLeadData }: any) => {
     const handlePhoneChange = (value: string) => {
         const cleanPhone = value.replace(/[^\d]/g, '');
         handleChange('phoneNumber', cleanPhone);
-    };  
+    };
 
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                <div><label className="text-sm font-medium">Full name</label><input type="text" value={leadData.fullName} onChange={e => handleChange('fullName', e.target.value)} className="w-full mt-2 p-2.5 border rounded-lg" /></div>
+                <div><label className="text-sm font-medium">Full name</label><input type="text" value={leadData.fullName} onChange={e => handleChange('fullName', e.target.value)} className="w-full mt-2 p-2.5 border rounded-lg bg-white" /></div>
                 <div></div>
                 <div>
                     <label className="text-sm font-medium">Phone number</label>
-                    <div className="flex mt-2">
-                        <select 
-                            value={selectedCountryCode} 
+                    <div className="flex mt-2 h-[42px]">
+                        <select
+                            value={selectedCountryCode}
                             onChange={e => handleCountryCodeChange(e.target.value)}
-                            className="inline-flex items-center px-2 border border-r-0 bg-gray-50 rounded-l-lg text-sm"
+                            className="inline-flex items-center px-2 border border-r-0 bg-gray-50 rounded-l-lg text-sm h-full"
                         >
                             {countryCodes.map((country, index) => (
                                 <option key={index} value={country.code}>
@@ -346,11 +373,11 @@ export const LeadDetailsForm = ({ leadData, setLeadData }: any) => {
                                 </option>
                             ))}
                         </select>
-                        <input 
-                            type="text" 
-                            value={leadData.phoneNumber} 
-                            onChange={e => handlePhoneChange(e.target.value)} 
-                            className={`w-full p-2.5 border rounded-r-lg ${leadData.phoneNumber && !validatePhoneNumber(leadData.phoneNumber) ? 'border-red-500' : ''}`} 
+                        <input
+                            type="text"
+                            value={leadData.phoneNumber}
+                            onChange={e => handlePhoneChange(e.target.value)}
+                            className={`w-full p-2.5 border rounded-r-lg bg-white h-full ${leadData.phoneNumber && !validatePhoneNumber(leadData.phoneNumber) ? 'border-red-500' : ''}`}
                             placeholder="Phone number"
                         />
                     </div>
@@ -360,17 +387,17 @@ export const LeadDetailsForm = ({ leadData, setLeadData }: any) => {
                 </div>
                 <div>
                     <label className="text-sm font-medium">Email</label>
-                    <input 
-                        type="email" 
-                        value={leadData.email} 
-                        onChange={e => handleChange('email', e.target.value)} 
-                        className={`w-full mt-2 p-2.5 border rounded-lg ${leadData.email && !validateEmail(leadData.email) ? 'border-red-500' : ''}`} 
+                    <input
+                        type="email"
+                        value={leadData.email}
+                        onChange={e => handleChange('email', e.target.value)}
+                        className={`w-full mt-2 p-2.5 border rounded-lg bg-white ${leadData.email && !validateEmail(leadData.email) ? 'border-red-500' : ''}`}
                     />
                     {leadData.email && !validateEmail(leadData.email) && (
                         <div className="text-red-500 text-sm mt-1">Please enter a valid email with @ and .com</div>
                     )}
                 </div>
-                <div><label className="text-sm font-medium">Status</label><CustomSelect options={statusOptions} value={leadData.status} onChange={v => handleChange('status', v)} /></div>
+                <div><label className="text-sm font-medium">Status</label><CustomSelect options={statusOptions} value={leadData.status} onChange={v => handleChange('status', v)} placeholder="Select Status" /></div>
                 <div><label className="text-sm font-medium">Assigned to</label><CustomSelect options={agents} placeholder="Assigned to" value={leadData.assignedTo} onChange={v => handleChange('assignedTo', v)} /></div>
             </div>
         </div>
@@ -380,7 +407,7 @@ export const LeadDetailsForm = ({ leadData, setLeadData }: any) => {
 export const LeadTypeAndRequirementsForm = ({ leadData, handleStateUpdate, handleButtonGroupToggle }: any) => {
     return (
         <div className="space-y-8">
-            <FormSection title="Lead Type"><SegmentedControl options={[{label: 'Buyer', value: 'buyer'}, {label: 'Tenant', value: 'tenant'}]} value={leadData.leadType} onChange={(v) => handleStateUpdate('leadType', v)} /></FormSection>
+            <FormSection title="Lead Type"><SegmentedControl options={[{ label: 'Buyer', value: 'buyer' }, { label: 'Tenant', value: 'tenant' }]} value={leadData.leadType} onChange={(v) => handleStateUpdate('leadType', v)} /></FormSection>
             <FormSection title="Requirements">
                 <div className="space-y-2">
                     <FormRow>
@@ -401,5 +428,5 @@ export const LeadTypeAndRequirementsForm = ({ leadData, handleStateUpdate, handl
 };
 
 export const NoteForm = ({ leadData, setLeadData }: any) => (
-    <FormSection title="Note"><div className="w-full"><label className="text-sm font-medium">Add note</label><textarea placeholder="Your note" value={leadData.note} onChange={e => setLeadData({...leadData, note: e.target.value})} rows={4} className="w-full mt-2 p-2.5 border rounded-lg" /></div></FormSection>
+    <FormSection title="Note"><div className="w-full"><label className="text-sm font-medium">Add note</label><textarea placeholder="Your note" value={leadData.note} onChange={e => setLeadData({ ...leadData, note: e.target.value })} rows={4} className="w-full mt-2 p-2.5 border rounded-lg bg-white" /></div></FormSection>
 );

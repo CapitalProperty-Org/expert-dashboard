@@ -33,6 +33,7 @@ import UserDetails from "./pages/UserDetails";
 import CompanyProfile from "./pages/CompanyProfile";
 import { ListingsProvider } from "./context/ListingsContext";
 import { CreditsProvider } from "./context/CreditsContext";
+import { LeadsProvider } from "./context/LeadsContext";
 import LeadDetails from "./pages/LeadDetails";
 
 import ListingPreviewPage from "./pages/ListingPreviewPage";
@@ -74,7 +75,11 @@ const AppRoutes = () => {
           <Route path="listings-archive" element={<ListingsArchive />} />
           <Route path="cts-listings" element={<CtsListings />} />
           <Route path="listings-settings" element={<ListingsSettings />} />
-          <Route path="leads-management" element={<LeadsManagement />} />
+          <Route path="leads-management" element={
+            <LeadsProvider>
+              <LeadsManagement />
+            </LeadsProvider>
+          } />
           <Route path="new-lead" element={<NewLead />} />
           <Route path="leads/:id" element={<LeadDetails />} />
           <Route path="leads-regular-management" element={<LeadsRegularManagement />} />

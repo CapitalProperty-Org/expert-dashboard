@@ -41,22 +41,24 @@ export const LeadsProvider = ({ children }: { children: React.ReactNode }) => {
         setError(null);
         try {
             const params: { [key: string]: string | number | boolean } = {};
-            
-             // direct filters
-       if (filters.query) params.query = filters.query;
-        if (filters.category) params.category = filters.category;
-        if (filters.propertyType) params.propertyType = filters.propertyType;
-        if (filters.type) params.type = filters.type;
-        if (filters.agentId) params.agentId = filters.agentId;
 
-        // createdAt direct keys for backend support
-        if (filters.date_from) {
-            params['filter[createdAt][from]'] = filters.date_from;
-        }
-        if (filters.date_to) {
-            params['filter[createdAt][to]'] = filters.date_to;
-        }
-            
+            // direct filters
+            if (filters.query) params.query = filters.query;
+            if (filters.category) params.category = filters.category;
+            if (filters.propertyType) params.propertyType = filters.propertyType;
+            if (filters.type) params.type = filters.type;
+            if (filters.agentId) params.agentId = filters.agentId;
+            if (filters.assigned) params.assigned = filters.assigned;
+            if (filters.hideAgentLeads) params.hideAgentLeads = filters.hideAgentLeads;
+
+            // createdAt direct keys for backend support
+            if (filters.date_from) {
+                params['filter[createdAt][from]'] = filters.date_from;
+            }
+            if (filters.date_to) {
+                params['filter[createdAt][to]'] = filters.date_to;
+            }
+
             const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/agent-opportunities`, { params });
 
             setLeads(response.data.data);
