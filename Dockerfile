@@ -1,7 +1,7 @@
 FROM node:20-alpine as builder
 WORKDIR /app
-COPY package.json ./
-RUN npm install --legacy-peer-deps
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 COPY . .
 ARG VITE_BASE_URL
 ENV VITE_BASE_URL=$VITE_BASE_URL
