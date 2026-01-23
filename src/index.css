@@ -1,6 +1,7 @@
 /* Leaflet CSS */
 @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
 
+/* Git Deployment Test - 2026-01-23 */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -136,19 +137,22 @@ html {
 }
 
 /* Force White Inputs on All Browsers */
-input, select, textarea {
+input,
+select,
+textarea {
   background-color: #ffffff !important;
-  color: #1f2937 !important; /* gray-800 to ensure readability */
+  color: #1f2937 !important;
+  /* gray-800 to ensure readability */
 }
 
 /* Override Browser Autofill Styles */
 input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
-input:-webkit-autofill:active{
-    -webkit-box-shadow: 0 0 0 30px white inset !important;
-    -webkit-text-fill-color: #1f2937 !important;
-    transition: background-color 5000s ease-in-out 0s;
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: #1f2937 !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Custom Day Picker Styles */
@@ -165,7 +169,7 @@ input:-webkit-autofill:active{
   background: white;
 }
 
-.rdp-day_selected, 
+.rdp-day_selected,
 .rdp-day_selected:hover {
   background-color: var(--rdp-accent-color) !important;
   color: white !important;
@@ -185,6 +189,7 @@ input:-webkit-autofill:active{
   font-weight: 700;
   color: var(--rdp-accent-color);
 }
+
 /* a {
   font-weight: 500;
   color: #646cff;
