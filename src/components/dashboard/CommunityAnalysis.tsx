@@ -161,6 +161,27 @@ const CommunityAnalysis = () => {
     const mapRef = useRef<L.Map | null>(null);
     const markersRef = useRef<L.Marker[]>([]);
 
+    // Market Trends State
+    const [marketTrends, setMarketTrends] = useState<{
+        listings: { value: string; change: string };
+        leads: { value: string; change: string };
+    } | null>(null);
+
+    // Fetch Market Trends
+    useEffect(() => {
+        const fetchMarketTrends = async () => {
+            try {
+                const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/overview/market-trends`);
+                setMarketTrends(response.data);
+            } catch (error) {
+                console.error("Failed to fetch market trends", error);
+                // Fallback to static data on error
+                setMarketTrends(SIDEBAR_DATA.marketTrends);
+            }
+        };
+        fetchMarketTrends();
+    }, []);
+
     useEffect(() => {
         const fetchCommunities = async () => {
             try {
@@ -313,6 +334,7 @@ const CommunityAnalysis = () => {
     };
 
     const selectedData = communityData.find(c => c.id === selectedCommunity);
+    const displayTrends = marketTrends || SIDEBAR_DATA.marketTrends;
 
     return (
         <div className="mt-10">
@@ -446,11 +468,11 @@ const CommunityAnalysis = () => {
                             <div className="mb-8">
                                 <h4 className="text-sm font-bold text-gray-900 mb-3">Where market is going?</h4>
                                 <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-                                    This section shows the trends compared to the previous period based on the dates you have selected. For example, July vs June stats showing increase or decrease in these metrics.
+                                    This section shows the trends for the <strong>Last 30 Days</strong> compared to the previous period.
                                 </p>
                                 <div className="flex gap-4 mb-4">
-                                    <TrendCard label="Listings" value={SIDEBAR_DATA.marketTrends.listings.value} change={SIDEBAR_DATA.marketTrends.listings.change} />
-                                    <TrendCard label="Leads" value={SIDEBAR_DATA.marketTrends.leads.value} change={SIDEBAR_DATA.marketTrends.leads.change} />
+                                    <TrendCard label="Listings" value={displayTrends.listings.value} change={displayTrends.listings.change} />
+                                    <TrendCard label="Leads" value={displayTrends.leads.value} change={displayTrends.leads.change} />
                                 </div>
                                 <div className="bg-orange-50 rounded-lg p-4 flex gap-3">
                                     <AlertCircle className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
