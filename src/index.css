@@ -135,7 +135,21 @@ html {
   padding: 0;
 }
 
-/* ... existing styles ... */
+/* Force White Inputs on All Browsers */
+input, select, textarea {
+  background-color: #ffffff !important;
+  color: #1f2937 !important; /* gray-800 to ensure readability */
+}
+
+/* Override Browser Autofill Styles */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #1f2937 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
 
 /* Custom Day Picker Styles */
 .rdp {
