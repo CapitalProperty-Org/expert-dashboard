@@ -1,13 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Plus } from 'lucide-react';
 import { cn } from '../lib/utils';
 import TransactionsEmptyState from '../components/dashboard/TransactionsEmptyState';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+
+interface Transaction {
+    id: string;
+    agent: { name: string; photo: string };
+    listingDetails: { title: string; location: string; reference: string; image: string };
+    transactionValue: string;
+    claimedOn: string;
+    status: string;
+}
 
 const Transactions = () => {
     const [activeTab, setActiveTab] = useState('transactions');
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [hasData, _setHasData] = useState(false); // Set to true to see a table later
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [hasData, setHasData] = useState(false);
+
+    useEffect(() => {
+        const fetchTransactions = async () => {
+            setLoading(true);
+            try {
+                const token = localStorage.getItem('token');
+                const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/transactions`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                    params: { tab: activeTab }
+                });
+                setTransactions(data);
+                setHasData(data.length > 0);
+            } catch (error) {
+                console.error('Failed to fetch transactions', error);
+                setTransactions([]);
+                setHasData(false);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTransactions();
+    }, [activeTab]);
 
     const tabs = ['Transactions', 'Approved', 'Pending', 'Rejected'];
     const tableHeaders = ["Agent", "Listing Details", "Transaction Value", "Claimed On", "Status"];
@@ -19,12 +54,12 @@ const Transactions = () => {
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <h1 className="text-2xl font-bold text-gray-800">Transactions</h1>
                     <Link to="/claim-transaction">
-                           <button className="w-full lg:w-auto bg-red-600 text-white font-semibold py-3 lg:py-2 px-4 rounded-md flex items-center justify-center gap-2 text-sm">
-                        <Plus size={16} />
-                        Claim Transaction
-                    </button>
+                        <button className="w-full lg:w-auto bg-red-600 text-white font-semibold py-3 lg:py-2 px-4 rounded-md flex items-center justify-center gap-2 text-sm">
+                            <Plus size={16} />
+                            Claim Transaction
+                        </button>
                     </Link>
-             
+
                 </div>
 
                 <div className="relative w-full lg:max-w-xs">
@@ -66,10 +101,52 @@ const Transactions = () => {
                                     ))}
                                 </tr>
                             </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-12">
+                                            <div className="flex items-center justify-center">
+                                                <LoadingSpinner />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    transactions.map((tx) => (
+                                        <tr key={tx.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center">
+                                                    <img className="h-8 w-8 rounded-full object-cover mr-3" src={tx.agent.photo} alt={tx.agent.name} />
+                                                    <div className="text-sm font-medium text-gray-900">{tx.agent.name}</div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center">
+                                                    <img className="h-10 w-10 rounded object-cover mr-3" src={tx.listingDetails.image || 'https://via.placeholder.com/50'} alt="Listing" />
+                                                    <div>
+                                                        <div className="text-sm font-medium text-gray-900">{tx.listingDetails.title}</div>
+                                                        <div className="text-xs text-gray-500">{tx.listingDetails.reference}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {tx.transactionValue}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {tx.claimedOn}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                    {tx.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
                         </table>
                     </div>
                     {/* Empty State will be shown here */}
-                    {!hasData && (
+                    {!loading && !hasData && (
                         <div className="flex items-center justify-center">
                             <TransactionsEmptyState />
                         </div>

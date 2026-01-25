@@ -338,86 +338,88 @@ const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
                                     <div className="space-y-6">
                                         {!['draft', 'pending_publishing', 'archived'].includes(listing.state?.type || '') && (listing.state as any)?.stage !== 'archived' && (
                                             <>
-                                                {/* Performance Funnel Card */}
-                                                <div className="bg-white rounded-lg border shadow-sm p-5">
-                                                    <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
+                                                {/* Performance Funnel Card - Updated Design */}
+                                                <div className="bg-[#F9F8FD] rounded-xl border border-[#EEEBFA] p-6">
+                                                    <div className="flex items-center justify-between gap-1 overflow-x-auto pb-2">
                                                         <div className="text-center min-w-[80px]">
-                                                            <div className="text-2xl font-bold text-gray-900">{listing.impressions || 0}</div>
-                                                            <div className="text-gray-500 text-xs mt-1">Impressions</div>
+                                                            <div className="text-3xl font-bold text-gray-900 mb-1">{listing.impressions || 0}</div>
+                                                            <div className="text-[#6B7280] text-sm">Impressions</div>
                                                         </div>
-                                                        <ChevronRight className="text-gray-300 flex-shrink-0" size={20} />
+                                                        <ChevronRight className="text-[#D1D5DB] flex-shrink-0 mx-2" size={24} />
                                                         <div className="text-center min-w-[80px]">
-                                                            <div className="text-2xl font-bold text-gray-900">{listing.clicks || 0}</div>
-                                                            <div className="text-gray-500 text-xs mt-1">Listing Clicks</div>
+                                                            <div className="text-3xl font-bold text-gray-900 mb-1">{listing.clicks || 0}</div>
+                                                            <div className="text-[#6B7280] text-sm">Listing Clicks</div>
                                                         </div>
-                                                        <ChevronRight className="text-gray-300 flex-shrink-0" size={20} />
+                                                        <ChevronRight className="text-[#D1D5DB] flex-shrink-0 mx-2" size={24} />
                                                         <div className="text-center min-w-[80px]">
-                                                            <div className="text-2xl font-bold text-gray-900">{listing.lead_clicks || 0}</div>
-                                                            <div className="text-gray-500 text-xs mt-1">Lead Clicks</div>
+                                                            <div className="text-3xl font-bold text-gray-900 mb-1">{listing.lead_clicks || 0}</div>
+                                                            <div className="text-[#6B7280] text-sm">Lead Clicks</div>
                                                         </div>
-                                                        <ChevronRight className="text-gray-300 flex-shrink-0" size={20} />
+                                                        <ChevronRight className="text-[#D1D5DB] flex-shrink-0 mx-2" size={24} />
                                                         <div className="text-center min-w-[80px]">
-                                                            <div className="text-2xl font-bold text-gray-900">{listing.leads_received || 0}</div>
-                                                            <div className="text-gray-500 text-xs mt-1">Leads</div>
+                                                            <div className="text-3xl font-bold text-gray-900 mb-1">{listing.leads_received || 0}</div>
+                                                            <div className="text-[#6B7280] text-sm">Leads</div>
                                                         </div>
                                                     </div>
 
-                                                    <div className="mt-4 bg-gray-50 rounded-lg p-2 text-center border relative overflow-hidden">
-                                                        <div className="absolute inset-y-0 left-0 bg-violet-100/50" style={{ width: `${Math.min(listing.ctr || 0, 100)}%` }}></div>
-                                                        <span className="relative z-10 text-sm font-bold text-gray-800">{listing.ctr || 0}% CTR</span>
+                                                    {/* CTR Bar - White Box Style */}
+                                                    <div className="mt-6 bg-white rounded-lg py-3 text-center shadow-sm border border-gray-100">
+                                                        <span className="text-sm font-semibold text-gray-700">
+                                                            {listing.ctr || 0}% CTR
+                                                        </span>
                                                     </div>
 
-                                                    <div className="mt-4 text-xs text-gray-400">
+                                                    <div className="mt-4 text-xs text-[#9CA3AF] font-medium">
                                                         Last updated: {listing.updated_at ? `${formatDistanceToNow(new Date(listing.updated_at))} ago` : 'Recently'}
                                                     </div>
                                                 </div>
 
-                                                {/* Leads Breakdown Card */}
-                                                <div className="bg-white rounded-lg border shadow-sm p-5">
-                                                    <div className="flex items-center justify-between gap-4">
+                                                {/* Leads Breakdown Card - Updated Typography */}
+                                                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+                                                    <div className="flex items-center justify-between gap-2">
                                                         <div className="text-center">
-                                                            <div className="text-2xl font-bold text-gray-900">{listing.leads_received || 0}</div>
-                                                            <div className="text-gray-500 text-xs mt-1">Leads</div>
+                                                            <div className="text-3xl font-bold text-gray-900 mb-1">{listing.leads_received || 0}</div>
+                                                            <div className="text-[#6B7280] text-sm">Leads</div>
                                                         </div>
-                                                        <div className="text-gray-400 font-light text-2xl">=</div>
-                                                        <div className="flex gap-4 sm:gap-8">
+                                                        <div className="text-gray-300 text-2xl font-light self-center mb-4">=</div>
+                                                        <div className="flex gap-0.5 sm:gap-1">
                                                             <div className="text-center">
-                                                                <div className="text-2xl font-bold text-gray-900">0</div>
-                                                                <div className="text-gray-500 text-xs mt-1">Calls</div>
+                                                                <div className="text-3xl font-bold text-gray-900 mb-1">{(listing as any).portals?.leads?.call || 0}</div>
+                                                                <div className="text-[#6B7280] text-sm">Calls</div>
                                                             </div>
-                                                            <div className="text-gray-300 font-light text-xl mt-1">+</div>
+                                                            <div className="text-gray-300 text-2xl font-light self-center mb-4">+</div>
                                                             <div className="text-center">
-                                                                <div className="text-2xl font-bold text-gray-900">0</div>
-                                                                <div className="text-gray-500 text-xs mt-1">Whatsapp</div>
+                                                                <div className="text-3xl font-bold text-gray-900 mb-1">{(listing as any).portals?.leads?.whatsapp || 0}</div>
+                                                                <div className="text-[#6B7280] text-sm">Whatsapp</div>
                                                             </div>
-                                                            <div className="text-gray-300 font-light text-xl mt-1">+</div>
+                                                            <div className="text-gray-300 text-2xl font-light self-center mb-4">+</div>
                                                             <div className="text-center">
-                                                                <div className="text-2xl font-bold text-gray-900">{listing.leads_received || 0}</div>
-                                                                <div className="text-gray-500 text-xs mt-1">Email</div>
+                                                                <div className="text-3xl font-bold text-gray-900 mb-1">{(listing as any).portals?.leads?.email || 0}</div>
+                                                                <div className="text-[#6B7280] text-sm">Email</div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                {/* Additional Details */}
-                                                <div className="space-y-4 pt-2">
+                                                {/* Additional Details - Updated Spacing */}
+                                                <div className="space-y-6 pt-4">
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-gray-600 font-medium">Total credits spent</span>
-                                                        <div className="flex items-center gap-1.5 font-bold text-gray-900">
-                                                            <Calculator size={16} className="text-gray-400" />
+                                                        <span className="text-[#4B5563] text-sm">Total credits spent</span>
+                                                        <div className="flex items-center gap-1.5 font-bold text-gray-900 text-sm">
+                                                            <Calculator size={18} className="text-gray-400" />
                                                             {listing.credits_spent || 35}
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-gray-600 font-medium">Exposure</span>
-                                                        <span className="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded text-xs font-bold text-gray-600 uppercase tracking-wide">
+                                                        <span className="text-[#4B5563] text-sm">Exposure</span>
+                                                        <span className="px-2.5 py-0.5 bg-white border border-gray-200 rounded text-[10px] font-bold text-[#4B5563] uppercase tracking-wide shadow-sm">
                                                             {listing.exposure || 'STANDARD'}
                                                         </span>
                                                     </div>
-                                                    <div className="space-y-1">
-                                                        <div className="text-gray-600 text-sm font-medium">Listing Price</div>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-xl font-bold text-gray-900">
+                                                    <div className="space-y-1.5 pt-2">
+                                                        <div className="text-[#6B7280] text-xs">Listing Price</div>
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-2xl font-bold text-gray-900">
                                                                 {listing.price?.amounts?.sale
                                                                     ? `${new Intl.NumberFormat('en-US').format(listing.price.amounts.sale)} AED`
                                                                     : (listing.price?.amounts?.rent
@@ -425,8 +427,8 @@ const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
                                                                         : 'Price on Request')}
                                                             </span>
                                                             {listing.price_realism && (
-                                                                <span className="px-2 py-0.5 bg-gray-100 rounded text-xs font-semibold text-gray-700">
-                                                                    {listing.price_realism.replace('_', ' ')}
+                                                                <span className="px-3 py-1 bg-[#F3F4F6] rounded-md text-xs font-medium text-gray-700">
+                                                                    {listing.price_realism.replace('_', ' ').replace(/^\w/, c => c.toUpperCase())}
                                                                 </span>
                                                             )}
                                                         </div>
