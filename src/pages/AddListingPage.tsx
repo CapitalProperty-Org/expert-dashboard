@@ -229,6 +229,10 @@ const AddListingPage = () => {
           type: 'SET_STATE',
           payload
         });
+
+        // Initialize lastSavedDataRef to track changes for exit logic
+        lastSavedDataRef.current = JSON.stringify(payload);
+
         // Remove setCompletedSteps to allow cascade validation from child components
         // setCompletedSteps(['core', 'specs', 'media', 'price', 'amenities', 'description']);
       } catch (error) {
@@ -749,7 +753,11 @@ const AddListingPage = () => {
   };
 
   const handleExit = () => {
-    if (formData.reference) {
+    // Professional dirty check: compare current form state with last saved/loaded state
+    const currentDataStr = JSON.stringify(formData);
+    const isDirty = lastSavedDataRef.current !== '' && currentDataStr !== lastSavedDataRef.current;
+
+    if (formData.reference && isDirty) {
       setIsExitModalOpen(true);
     } else {
       navigate('/listings-management');
