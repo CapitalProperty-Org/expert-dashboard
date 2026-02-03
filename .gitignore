@@ -12,6 +12,30 @@ dist
 dist-ssr
 *.local
 
+# Environment Variables & Secrets (CRITICAL SECURITY)
+.env
+.env.*
+!.env.example
+!.env.template
+
+# API Keys & Certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.cer
+*.crt
+serviceAccountKey.json
+firebase-key.json
+google-services.json
+GoogleService-Info.plist
+
+# Sensitive Configuration
+config/secrets.*
+secrets.json
+credentials.json
+.secrets
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
