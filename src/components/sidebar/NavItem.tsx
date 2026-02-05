@@ -26,7 +26,12 @@ const NavItem = ({ item }: NavItemProps) => {
         )}
       >
         <item.icon className={cn("h-5 w-5", isActive ? "text-violet-600" : "text-gray-500")} />
-        <span>{item.label}</span>
+        <span className="flex-1">{item.label}</span>
+        {item.badge ? (
+          <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+            {item.badge}
+          </span>
+        ) : null}
       </Link>
     );
   }

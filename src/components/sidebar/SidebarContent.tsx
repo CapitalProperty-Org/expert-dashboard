@@ -11,8 +11,43 @@ import UserProfile from './UserProfile';
 import NavItem from './NavItem';
 import CreditsStatus from './CreditsStatus';
 import type { NavItemType } from '../../types';
+import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
+import { useState, useEffect } from 'react';
 
 const SidebarContent = () => {
+  const { token } = useAuth();
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        // Fetch only count of unread notifications
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/notifications?seen=false&limit=1`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        // Assuming the API returns meta with total entries regardless of limit
+        // Current API structure: { data: [], pagination: {...}, meta: { total, totalSeen, totalNotSeen } }
+        if (response.data?.meta?.totalNotSeen !== undefined) {
+          setUnreadCount(response.data.meta.totalNotSeen);
+        } else if (response.data?.meta?.total !== undefined) {
+          // Fallback if totalNotSeen not provided but filtered by seen=false
+          setUnreadCount(response.data.meta.total);
+        }
+      } catch (error) {
+        console.error('Failed to fetch unread notifications count', error);
+      }
+    };
+
+    fetchUnreadCount();
+
+    // Poll every 60 seconds
+    const interval = setInterval(fetchUnreadCount, 60000);
+    return () => clearInterval(interval);
+  }, [token]);
+
   const navItems: NavItemType[] = [
     {
       label: 'Dashboard', href: '#', icon: LayoutDashboard,
@@ -62,7 +97,12 @@ const SidebarContent = () => {
       ]
     },
     { label: 'Security', href: '/security', icon: Shield },
-    { label: 'Notifications', href: '/notifications', icon: Bell }, // <-- تحديث الرابط
+    {
+      label: 'Notifications',
+      href: '/notifications',
+      icon: Bell,
+      badge: unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : undefined
+    },
     { label: 'PF Academy', href: '#', icon: GraduationCap },
     { label: 'Support', href: '#', icon: LifeBuoy },
   ];

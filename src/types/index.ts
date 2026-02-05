@@ -6,6 +6,7 @@ export interface NavItemType {
   href: string;
   active?: boolean;
   children?: NavItemType[];
+  badge?: number | string;
 }
 
 export interface StatCardType {

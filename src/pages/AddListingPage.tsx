@@ -112,6 +112,7 @@ const AddListingPage = () => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const lastSavedDataRef = React.useRef<string>('');
+  const initialDataRef = React.useRef<string>('');
 
   const [agents, setAgents] = useState<SelectOption[]>([]);
   const [agentData, setAgentData] = useState<any>(null);
@@ -229,6 +230,9 @@ const AddListingPage = () => {
           type: 'SET_STATE',
           payload
         });
+
+        // Set initial data state for "Exit" comparison
+        initialDataRef.current = JSON.stringify(payload);
 
         // Initialize lastSavedDataRef to track changes for exit logic
         lastSavedDataRef.current = JSON.stringify(payload);
@@ -370,11 +374,17 @@ const AddListingPage = () => {
     const listingData = {
       reference: data.reference,
       assigned_to: assignedId ? { id: assignedId } : undefined,
-      state: { stage: 'draft', type: 'pending_publishing' },
+      state: { stage: 'draft', type: 'draft' },
       uae_emirate: data.uae_emirate || '',
       city: data.uae_emirate === 'northern_emirates' ? (data.city || null) : null,
-      title: { en: data.title || `Draft: ${data.reference}` },
-      description: { en: data.description || '' },
+      title: {
+        en: data.title || `Draft: ${data.reference}`,
+        ar: data.title_ar || ''
+      },
+      description: {
+        en: data.description || '',
+        ar: data.description_ar || ''
+      },
       category: data.category || '',
       type: data.propertyType || '',
       price: {
@@ -551,7 +561,7 @@ const AddListingPage = () => {
       reference: formData.reference,
       assigned_to: { id: assignedId },
       // Update: Keep as draft during save
-      state: { stage: 'draft', type: 'pending_publishing' },
+      state: { stage: 'draft', type: 'pending_review' },
       available_from: formData.available === 'immediately'
         ? new Date().toISOString()
         : (formData.availableDate
@@ -566,8 +576,14 @@ const AddListingPage = () => {
       rental_period: formData.rentalPeriod,
       uae_emirate: formData.uae_emirate,
       city: formData.uae_emirate === 'northern_emirates' ? formData.city : null,
-      title: { en: formData.title },
-      description: { en: formData.description },
+      title: {
+        en: formData.title,
+        ar: formData.title_ar || ''
+      },
+      description: {
+        en: formData.description,
+        ar: formData.description_ar || ''
+      },
       location: formData.propertyLocation
         ? {
           id: String((formData.propertyLocation as SelectOption).value),
@@ -690,11 +706,17 @@ const AddListingPage = () => {
     const listingData = {
       reference: formData.reference,
       assigned_to: assignedId ? { id: assignedId } : undefined,
-      state: { stage: 'draft', type: 'pending_publishing' },
+      state: { stage: 'draft', type: 'draft' },
       uae_emirate: formData.uae_emirate || '',
       city: formData.uae_emirate === 'northern_emirates' ? (formData.city || null) : null,
-      title: { en: formData.title || `Draft: ${formData.reference}` },
-      description: { en: formData.description || '' },
+      title: {
+        en: formData.title || `Draft: ${formData.reference}`,
+        ar: formData.title_ar || ''
+      },
+      description: {
+        en: formData.description || '',
+        ar: formData.description_ar || ''
+      },
       category: formData.category || '',
       type: formData.propertyType || '',
       price: {
@@ -757,7 +779,14 @@ const AddListingPage = () => {
     const currentDataStr = JSON.stringify(formData);
     const isDirty = lastSavedDataRef.current !== '' && currentDataStr !== lastSavedDataRef.current;
 
-    if (formData.reference && isDirty) {
+    // Always show confirmation if we have made changes to the session
+    // Even if auto-saved, the user expects 'exit' confirmation if they touched something.
+    // Even if auto-saved, the user expects 'exit' confirmation if they touched something.
+    // const currentDataStr = JSON.stringify(formData); // Already defined above
+
+    const hasChangedSinceStart = initialDataRef.current !== '' && currentDataStr !== initialDataRef.current;
+
+    if (formData.reference && hasChangedSinceStart) {
       setIsExitModalOpen(true);
     } else {
       navigate('/listings-management');

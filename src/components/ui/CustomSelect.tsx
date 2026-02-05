@@ -160,6 +160,7 @@ const CustomSelect = ({
                 return (
                   <li key={option.value}>
                     <button
+                      type="button"
                       onClick={() => {
                         onChange(option);
                         if (!isMulti) {

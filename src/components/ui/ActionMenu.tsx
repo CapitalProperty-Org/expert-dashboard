@@ -43,8 +43,11 @@ interface ListingData {
         en?: string;
     };
     images?: string[];
-    assigned_to?: { id?: string | number };
-    created_by?: { id?: string | number };
+    media?: {
+        images?: Array<{ original: { url: string } } | { url: string }>;
+    };
+    assigned_to?: { id?: string | number; name?: string };
+    created_by?: { id?: string | number; name?: string };
 }
 
 interface ActionMenuProps {
@@ -111,10 +114,14 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
             imageSection.style.borderRadius = '8px';
             imageSection.style.border = '2px dashed #dee2e6';
 
-            if (listingData.images && listingData.images.length > 0) {
+            const listingImages = listingData.images && listingData.images.length > 0
+                ? listingData.images
+                : listingData.media?.images?.map(img => 'original' in img ? img.original.url : img.url) || [];
+
+            if (listingImages.length > 0) {
                 try {
                     const img = document.createElement('img');
-                    img.src = listingData.images[0];
+                    img.src = listingImages[0];
                     img.style.width = '400px';
                     img.style.height = '200px';
                     img.style.objectFit = 'cover';
@@ -211,13 +218,13 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                 tempDiv.appendChild(amenitiesSection);
             }
 
-            if (listingData.images && listingData.images.length > 1) {
+            if (listingImages.length > 1) {
                 const imagesSection = document.createElement('div');
                 imagesSection.innerHTML = `
                     <div style="margin-bottom: 20px;">
                         <h3 style="color: #333; font-size: 14px; margin-bottom: 8px;">Property Images</h3>
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                            ${listingData.images.slice(1, 5).map((imgSrc, index) => `
+                            ${listingImages.slice(1, 5).map((imgSrc, index) => `
                                 <div style="text-align: center;">
                                     <img src="${imgSrc}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid #dee2e6;" alt="Property Image ${index + 2}" />
                                     <p style="font-size: 10px; color: #666; margin-top: 5px;">Image ${index + 2}</p>
@@ -238,6 +245,19 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                     </div>
                 `;
                 tempDiv.appendChild(descSection);
+            }
+
+            if (listingData.assigned_to?.name) {
+                const agentSection = document.createElement('div');
+                agentSection.innerHTML = `
+                    <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+                        <h3 style="color: #333; font-size: 14px; margin-bottom: 8px;">Agent Details</h3>
+                        <div style="font-size: 12px; color: #666;">
+                            <strong>Name:</strong> ${listingData.assigned_to.name}
+                        </div>
+                    </div>
+                `;
+                tempDiv.appendChild(agentSection);
             }
 
             const footer = document.createElement('div');
@@ -420,9 +440,13 @@ const ActionMenu = ({ listingId, onActionComplete, listingData }: ActionMenuProp
                     <>
                         {/* Check for completeness: price, location, images, type, category */}
                         {(() => {
-                            const hasPrice = listingData?.price?.amounts?.sale || listingData?.price?.amounts?.yearly || listingData?.price?.amounts?.monthly;
+                            const hasPrice = listingData?.price?.amounts?.sale ||
+                                listingData?.price?.amounts?.yearly ||
+                                listingData?.price?.amounts?.monthly ||
+                                listingData?.price?.amounts?.rent ||
+                                (listingData?.price?.amounts && Object.values(listingData.price.amounts).some(v => v !== undefined && v !== null));
                             const hasLocation = listingData?.location?.name;
-                            const hasImages = listingData?.images && listingData.images.length > 0;
+                            const hasImages = (listingData?.images && listingData.images.length > 0) || (listingData?.media?.images && listingData.media.images.length > 0);
                             const hasType = listingData?.type;
                             const hasCategory = listingData?.category;
 

@@ -167,7 +167,16 @@ const ListingsTable = ({ listings, isSelectionMode, selectedIds, onSelectionChan
                                         {listing.price_realism || 'Good'}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center"><span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-700 capitalize">{listing.state.type}</span></td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                    <span className={`px-3 py-1 text-xs font-semibold rounded-full capitalize ${listing.state.type === 'pending_review'
+                                        ? 'bg-orange-50 text-orange-600'
+                                        : listing.state.type === 'rejected'
+                                            ? 'bg-red-100 text-red-800'
+                                            : 'bg-gray-100 text-gray-700'
+                                        }`}>
+                                        {listing.state.type === 'pending_review' ? 'Pending Review' : listing.state.type}
+                                    </span>
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{formatRelativeTime(listing.updated_at || listing.created_at || '')}</td>
                                 {isPublished && (
                                     <>

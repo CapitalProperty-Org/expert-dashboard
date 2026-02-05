@@ -292,26 +292,7 @@ const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
                                         ) : (
                                             <>
                                                 {/* Performance Metrics */}
-                                                {!['draft', 'pending_publishing', 'archived'].includes(listing.state?.type || '') && (listing.state as any)?.stage !== 'archived' && (
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="bg-gray-50 p-4 rounded-lg">
-                                                            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider block mb-1">Impressions</span>
-                                                            <span className="text-xl font-bold text-gray-900">{listing.impressions || 0}</span>
-                                                        </div>
-                                                        <div className="bg-gray-50 p-4 rounded-lg">
-                                                            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider block mb-1">Clicks</span>
-                                                            <span className="text-xl font-bold text-gray-900">{listing.clicks || 0}</span>
-                                                        </div>
-                                                        <div className="bg-gray-50 p-4 rounded-lg">
-                                                            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider block mb-1">CTR</span>
-                                                            <span className="text-xl font-bold text-gray-900">{listing.ctr || 0}%</span>
-                                                        </div>
-                                                        <div className="bg-gray-50 p-4 rounded-lg">
-                                                            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider block mb-1">Leads</span>
-                                                            <span className="text-xl font-bold text-gray-900">{listing.leads_received || 0}</span>
-                                                        </div>
-                                                    </div>
-                                                )}
+
 
                                                 <div className="border-t pt-6 space-y-4">
                                                     <DetailRow
@@ -336,7 +317,7 @@ const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
                                 )}
                                 {activeTab === 'insights' && (
                                     <div className="space-y-6">
-                                        {!['draft', 'pending_publishing', 'archived'].includes(listing.state?.type || '') && (listing.state as any)?.stage !== 'archived' && (
+                                        {!['draft', 'pending_review', 'rejected', 'archived'].includes(listing.state?.type || '') && (listing.state as any)?.stage !== 'archived' && (
                                             <>
                                                 {/* Performance Funnel Card - Updated Design */}
                                                 <div className="bg-[#F9F8FD] rounded-xl border border-[#EEEBFA] p-6">
@@ -439,7 +420,7 @@ const ListingSidebar = ({ listingId, onClose }: ListingSidebarProps) => {
 
                                         <ListingInsights qualityScore={listing.quality_score} />
 
-                                        {!['draft', 'pending_publishing'].includes(listing.state?.type) && (
+                                        {!['draft', 'pending_review', 'rejected'].includes(listing.state?.type) && (
                                             /* Auto-Renew Card */
                                             <div className="bg-white rounded-lg border shadow-sm p-4">
                                                 <div className="flex justify-between items-center mb-4">
