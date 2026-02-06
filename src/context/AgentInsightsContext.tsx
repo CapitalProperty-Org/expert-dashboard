@@ -55,12 +55,20 @@ export const AgentInsightsProvider = ({ children }: { children: React.ReactNode 
     const [pagination, setPagination] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [filters, setFilters] = useState<{ [key: string]: any }>({});
 
-    const fetchAgentStats = useCallback(async (filters: { [key: string]: any }) => {
+    const fetchAgentStats = useCallback(async (newFilters?: { [key: string]: any }) => {
         setLoading(true);
         setError(null);
+
+        // Merge with existing filters if provided
+        const updatedFilters = newFilters ? { ...filters, ...newFilters } : filters;
+        if (newFilters) {
+            setFilters(updatedFilters);
+        }
+
         try {
-            const params = new URLSearchParams(filters);
+            const params = new URLSearchParams(updatedFilters);
             const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/agent-stats/agents`, { params });
             setAgentsData(response.data.data || []);
             setCriteria(response.data.criteria || []);
@@ -70,7 +78,7 @@ export const AgentInsightsProvider = ({ children }: { children: React.ReactNode 
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [filters]);
 
     return (
         <AgentInsightsContext.Provider value={{ agentsData, criteria, pagination, loading, error, fetchAgentStats }}>

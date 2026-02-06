@@ -448,7 +448,7 @@ const CommunityAnalysis = () => {
                                 <p className="text-xs text-gray-500 mb-4 leading-relaxed">
                                     This section shows the trends compared to the previous period based on the dates you have selected. For example, July vs June stats showing increase or decrease in these metrics.
                                 </p>
-                                <div className="flex gap-2 mb-3">
+                                <div className="flex gap-4 mb-4">
                                     <TrendCard label="Listings" value={SIDEBAR_DATA.marketTrends.listings.value} change={SIDEBAR_DATA.marketTrends.listings.change} />
                                     <TrendCard label="Leads" value={SIDEBAR_DATA.marketTrends.leads.value} change={SIDEBAR_DATA.marketTrends.leads.change} />
                                 </div>
